@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "171669602068",
+    "project_id": "casi-61305",
+    "storage_bucket": "casi-61305.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:171669602068:android:2611e37bb6c992ce3a0c01",
+        "android_client_info": {
+          "package_name": "com.example.casi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAWarUQ6AbaP_0bQJS5DDkhKi3lQnJ-i98"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
