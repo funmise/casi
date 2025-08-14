@@ -1,1 +1,58 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"casi-61305","appId":"1:171669602068:android:2611e37bb6c992ce3a0c01","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"casi-61305","appId":"1:171669602068:ios:c50694ee49ab3a803a0c01","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"macos":{"default":{"projectId":"casi-61305","appId":"1:171669602068:ios:c50694ee49ab3a803a0c01","uploadDebugSymbols":false,"fileOutput":"macos/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"casi-61305","configurations":{"android":"1:171669602068:android:2611e37bb6c992ce3a0c01","ios":"1:171669602068:ios:c50694ee49ab3a803a0c01","macos":"1:171669602068:ios:c50694ee49ab3a803a0c01","web":"1:171669602068:web:f535cdd9f99096d03a0c01","windows":"1:171669602068:web:7c6fcb9cd958eb8f3a0c01"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "casi-61305",
+          "appId": "1:171669602068:android:2611e37bb6c992ce3a0c01",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "casi-61305",
+          "appId": "1:171669602068:ios:c50694ee49ab3a803a0c01",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "macos": {
+        "default": {
+          "projectId": "casi-61305",
+          "appId": "1:171669602068:ios:c50694ee49ab3a803a0c01",
+          "uploadDebugSymbols": false,
+          "fileOutput": "macos/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "casi-61305",
+          "configurations": {
+            "android": "1:171669602068:android:2611e37bb6c992ce3a0c01",
+            "ios": "1:171669602068:ios:c50694ee49ab3a803a0c01",
+            "macos": "1:171669602068:ios:c50694ee49ab3a803a0c01",
+            "web": "1:171669602068:web:f535cdd9f99096d03a0c01",
+            "windows": "1:171669602068:web:7c6fcb9cd958eb8f3a0c01"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint",
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ]
+    }
+  ]
+}
