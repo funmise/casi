@@ -37,7 +37,7 @@ class SignInPage extends StatelessWidget {
                         style: TextStyle(
                           color: AppPallete.white,
                           fontSize: 32,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.normal,
                         ),
                       ),
                       const SizedBox(height: 32),
@@ -69,9 +69,12 @@ class SignInPage extends StatelessWidget {
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.apple, size: 20),
+                              Icon(Icons.apple, size: 30),
                               SizedBox(width: 12),
-                              Text('Continue with Apple'),
+                              Text(
+                                'Continue with Apple',
+                                style: TextStyle(fontSize: 18),
+                              ),
                             ],
                           ),
                         ),

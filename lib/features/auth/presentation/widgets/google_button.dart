@@ -15,14 +15,18 @@ class GoogleButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppPallete.white,
           foregroundColor: AppPallete.black,
+          textStyle: const TextStyle(fontSize: 18),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset('assets/images/google_logo.png', height: 20),
+            Image.asset('assets/images/google_logo.png', height: 30),
             const SizedBox(width: 12),
-            const Text('Continue with Google'),
+            const Text(
+              'Continue with Google',
+              style: TextStyle(color: AppPallete.grey),
+            ),
           ],
         ),
       ),
