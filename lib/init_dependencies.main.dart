@@ -1,13 +1,13 @@
 part of 'init_dependencies.dart';
 
 final serviceLocator = GetIt.instance;
+const _webClientId =
+    "171669602068-2ggkl854la6ilk8u86d9brh6qicqvv1f.apps.googleusercontent.com";
 
 Future<void> initDependencies() async {
   // --- SDK bootstrapping ---
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  // google_sign_in v7: must initialize exactly once
-  await GoogleSignIn.instance.initialize();
+  await GoogleSignIn.instance.initialize(serverClientId: _webClientId);
 
   // Firebase singletons
   serviceLocator
