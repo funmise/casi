@@ -37,10 +37,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<UserModel> signInWithGoogle() async {
     try {
-      // 1) Interactive sign-in (throws on cancel/misconfig)
       final gsi.GoogleSignInAccount account = await _google.authenticate();
 
-      // 2) Get tokens (v7: synchronous container, no await)
       final gsi.GoogleSignInAuthentication authTokens = account.authentication;
 
       final String? idToken = authTokens.idToken;
@@ -48,7 +46,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw ServerException('Missing Google ID token.');
       }
 
-      // 3) Firebase sign-in (accessToken no longer required)
       final fa.OAuthCredential credential = fa.GoogleAuthProvider.credential(
         idToken: idToken,
       );
@@ -61,8 +58,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       return _map(u);
     } on gsi.GoogleSignInException catch (e) {
-      // v7: use code + optional description
-      final code = e.code; // GoogleSignInExceptionCode
+      final code = e.code;
       String msg;
       if (code == gsi.GoogleSignInExceptionCode.canceled) {
         msg = 'Sign-in cancelled.';
