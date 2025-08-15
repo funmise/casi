@@ -1,32 +1,159 @@
+import * as functions from "firebase-functions/v1";
+import {setGlobalOptions} from "firebase-functions/v2";
+
+import * as admin from "firebase-admin";
+import {FieldValue} from "firebase-admin/firestore";
+import type {UserRecord} from "firebase-admin/auth";
+
+/** Global defaults for non-v1 triggers. */
+setGlobalOptions({region: "northamerica-northeast1"});
+
 /**
- * Import function triggers from their respective submodules:
- *
- * import {onCall} from "firebase-functions/v2/https";
- * import {onDocumentWritten} from "firebase-functions/v2/firestore";
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
+ * Auth v1 triggers still need an explicit region.
+ * Keep blocking triggers in us-central1 so they appear in the console.
  */
+const authFns = functions.region("us-central1");
 
-import {setGlobalOptions} from "firebase-functions";
-import {onRequest} from "firebase-functions/https";
-import * as logger from "firebase-functions/logger";
+admin.initializeApp();
+const db = admin.firestore();
 
-// Start writing functions
-// https://firebase.google.com/docs/functions/typescript
+/** Minimal shape passed to the Auth beforeSignIn hook. */
+interface BlockingUserInfo {
+    uid: string;
+    email?: string | null;
+    displayName?: string | null;
+    photoURL?: string | null;
+    phoneNumber?: string | null;
+    emailVerified?: boolean;
+    disabled?: boolean;
+    providerInfo?: Array<{ providerId?: string }>;
+}
 
-// For cost control, you can set the maximum number of containers that can be
-// running at the same time. This helps mitigate the impact of unexpected
-// traffic spikes by instead downgrading performance. This limit is a
-// per-function limit. You can override the limit for each function using the
-// `maxInstances` option in the function's options, e.g.
-// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
-// NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
-// functions should each use functions.runWith({ maxInstances: 10 }) instead.
-// In the v1 API, each function can only serve one request per container, so
-// this will be the maximum concurrent request count.
-setGlobalOptions({ maxInstances: 10 });
+/** Public user document stored at /users/{uid}. */
+interface PublicUser {
+    uid: string;
+    email: string | null;
+    displayName: string | null;
+    photoURL: string | null;
+    phoneNumber: string | null;
+    emailVerified: boolean;
+    disabled: boolean;
+    providerIds: string[];
+}
 
-// export const helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+/**
+ * Check if a payload has `providerData` (Admin `UserRecord`).
+ * @param {UserRecord|BlockingUserInfo} u
+ * The user-like object from Auth.
+ * @returns {u is UserRecord}
+ * True when the object is a `UserRecord`.
+ */
+function hasProviderData(
+  u: UserRecord | BlockingUserInfo,
+): u is UserRecord {
+  return "providerData" in u;
+}
+
+/**
+ * Check if a payload has `providerInfo` (blocking sign-in payload).
+ * @param {UserRecord|BlockingUserInfo} u
+ * The user-like object from the blocking hook.
+ * @returns {u is BlockingUserInfo}
+ * True when the object is a blocking payload.
+ */
+function hasProviderInfo(
+  u: UserRecord | BlockingUserInfo,
+): u is BlockingUserInfo {
+  return "providerInfo" in u;
+}
+
+/**
+ * Convert any user payload into the public Firestore user shape.
+ * Works for both Admin `UserRecord` and blocking sign-in payloads.
+ * @param {UserRecord|BlockingUserInfo} u
+ * User information from Auth.
+ * @returns {PublicUser}
+ * The sanitized user document to store in Firestore.
+ */
+function toPublicUser(u: UserRecord | BlockingUserInfo): PublicUser {
+  const ids = hasProviderData(u) ?
+    u.providerData
+      .map((p) => p?.providerId)
+      .filter((id): id is string => !!id) :
+    hasProviderInfo(u) ?
+      (u.providerInfo ?? [])
+        .map((p) => p?.providerId)
+        .filter((id): id is string => !!id) :
+      [];
+
+  return {
+    uid: u.uid,
+    email: u.email ?? null,
+    displayName: u.displayName ?? null,
+    photoURL: u.photoURL ?? null,
+    phoneNumber: u.phoneNumber ?? null,
+    emailVerified: !!u.emailVerified,
+    disabled: !!u.disabled,
+    providerIds: ids,
+  };
+}
+
+/**
+ * Create/seed `/users/{uid}` when the account is created.
+ * @param {UserRecord} user
+ * The newly created Auth user.
+ * @returns {Promise<void>}
+ * Resolves when the write completes.
+ */
+export const onAuthUserCreated = authFns
+  .auth
+  .user()
+  .onCreate(async (user: UserRecord): Promise<void> => {
+    await db.doc(`users/${user.uid}`).set(
+      {
+        ...toPublicUser(user),
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+        lastSignInAt: FieldValue.serverTimestamp(),
+      },
+      {merge: true},
+    );
+  });
+
+/**
+ * Refresh the user doc on every sign-in (blocking).
+ * @param {BlockingUserInfo} event
+ * The blocking sign-in payload.
+ * @returns {Promise<object>}
+ * Empty object to continue sign-in without changing claims.
+ */
+export const refreshUserDocOnSignIn = authFns
+  .auth
+  .user()
+  .beforeSignIn(
+    async (event: BlockingUserInfo): Promise<object> => {
+      await db.doc(`users/${event.uid}`).set(
+        {
+          ...toPublicUser(event),
+          updatedAt: FieldValue.serverTimestamp(),
+          lastSignInAt: FieldValue.serverTimestamp(),
+        },
+        {merge: true},
+      );
+      return {};
+    },
+  );
+
+/**
+ * Delete `/users/{uid}` when the account is deleted.
+ * @param {UserRecord} user
+ * The deleted Auth user.
+ * @returns {Promise<void>}
+ * Resolves after the delete attempt.
+ */
+export const onAuthUserDeleted = authFns
+  .auth
+  .user()
+  .onDelete(async (user: UserRecord): Promise<void> => {
+    await db.doc(`users/${user.uid}`).delete().catch(() => null);
+  });
