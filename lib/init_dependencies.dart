@@ -4,7 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:google_sign_in/google_sign_in.dart';
 
-import 'core/common/cubits/app_user/app_user_cubit.dart';
+import 'core/cubits/app_user/app_user_cubit.dart';
 import 'features/auth/data/data_sources/auth_remote_data_source.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';

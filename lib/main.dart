@@ -2,7 +2,7 @@ import 'package:casi/core/widgets/loader.dart';
 import 'package:casi/init_dependencies.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'core/common/cubits/app_user/app_user_cubit.dart';
+import 'core/cubits/app_user/app_user_cubit.dart';
 import 'core/theme/theme.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/pages/sign_in_page.dart';
