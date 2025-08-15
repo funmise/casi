@@ -40,11 +40,10 @@ class SignInPage extends StatelessWidget {
                           fontWeight: FontWeight.normal,
                         ),
                       ),
-                      const SizedBox(height: 32),
 
                       Image.asset('assets/images/casi_logo.png', height: 400),
 
-                      const SizedBox(height: 48),
+                      const SizedBox(height: 100),
 
                       GoogleButton(
                         onPressed: () =>
