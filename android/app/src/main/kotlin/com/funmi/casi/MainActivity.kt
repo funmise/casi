@@ -1,4 +1,4 @@
-package com.example.casi
+package com.funmi.casi
 
 import io.flutter.embedding.android.FlutterActivity
 

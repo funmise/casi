@@ -52,7 +52,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyAWarUQ6AbaP_0bQJS5DDkhKi3lQnJ-i98',
-    appId: '1:171669602068:android:2611e37bb6c992ce3a0c01',
+    appId: '1:171669602068:android:14083f5908bcdd363a0c01',
     messagingSenderId: '171669602068',
     projectId: 'casi-61305',
     storageBucket: 'casi-61305.firebasestorage.app',
@@ -60,20 +60,24 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBtxfviq5xisPiKMLlnQ_cD2TmlHdIxPJU',
-    appId: '1:171669602068:ios:c50694ee49ab3a803a0c01',
+    appId: '1:171669602068:ios:9e5ee4cd03282cae3a0c01',
     messagingSenderId: '171669602068',
     projectId: 'casi-61305',
     storageBucket: 'casi-61305.firebasestorage.app',
-    iosBundleId: 'com.example.casi',
+    androidClientId: '171669602068-lppsvr2j06ifemq8o37gcv8s39gso2qm.apps.googleusercontent.com',
+    iosClientId: '171669602068-63mj89ot21krnec298evgk0ssa42p1n7.apps.googleusercontent.com',
+    iosBundleId: 'com.funmi.casi',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyBtxfviq5xisPiKMLlnQ_cD2TmlHdIxPJU',
-    appId: '1:171669602068:ios:c50694ee49ab3a803a0c01',
+    appId: '1:171669602068:ios:9e5ee4cd03282cae3a0c01',
     messagingSenderId: '171669602068',
     projectId: 'casi-61305',
     storageBucket: 'casi-61305.firebasestorage.app',
-    iosBundleId: 'com.example.casi',
+    androidClientId: '171669602068-lppsvr2j06ifemq8o37gcv8s39gso2qm.apps.googleusercontent.com',
+    iosClientId: '171669602068-63mj89ot21krnec298evgk0ssa42p1n7.apps.googleusercontent.com',
+    iosBundleId: 'com.funmi.casi',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
