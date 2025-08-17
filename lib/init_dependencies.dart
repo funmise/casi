@@ -1,4 +1,15 @@
+import 'package:casi/features/enrollment/data/data_sources/enrollment_remote_data_source.dart';
+import 'package:casi/features/enrollment/data/repositories/enrollment_repository_impl.dart';
+import 'package:casi/features/enrollment/domain/repositories/enrollment_repository.dart';
+import 'package:casi/features/enrollment/domain/usecases/accept_ethics.dart';
+import 'package:casi/features/enrollment/domain/usecases/create_pending_clinic.dart';
+import 'package:casi/features/enrollment/domain/usecases/get_active_ethics.dart';
+import 'package:casi/features/enrollment/domain/usecases/get_enrollment.dart';
+import 'package:casi/features/enrollment/domain/usecases/query_clinics_prefix.dart';
+import 'package:casi/features/enrollment/domain/usecases/set_enrollment_clinic.dart';
+import 'package:casi/features/enrollment/presentation/bloc/enrollment_bloc.dart';
 import 'package:casi/firebase_options.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:get_it/get_it.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fa;

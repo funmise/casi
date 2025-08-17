@@ -1,41 +1,73 @@
 part of 'init_dependencies.dart';
 
 final serviceLocator = GetIt.instance;
-const _webClientId =
-    "171669602068-2ggkl854la6ilk8u86d9brh6qicqvv1f.apps.googleusercontent.com";
 
 Future<void> initDependencies() async {
-  // --- SDK bootstrapping ---
+  // --- external SDK initialization ---
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await GoogleSignIn.instance.initialize(serverClientId: _webClientId);
+  await GoogleSignIn.instance.initialize();
 
-  // Firebase singletons
+  // Firebase and google singletons
   serviceLocator
     ..registerLazySingleton<fa.FirebaseAuth>(() => fa.FirebaseAuth.instance)
+    ..registerLazySingleton<FirebaseFirestore>(() => FirebaseFirestore.instance)
     ..registerLazySingleton<GoogleSignIn>(() => GoogleSignIn.instance);
 
   // Core
   serviceLocator.registerLazySingleton(() => AppUserCubit());
 
-  // Auth
+  // ---- Auth ----
   serviceLocator
+    // DataSource
     ..registerFactory<AuthRemoteDataSource>(
       () => AuthRemoteDataSourceImpl(
         auth: serviceLocator(),
         google: serviceLocator(),
       ),
     )
+    //Repository
     ..registerFactory<AuthRepository>(
       () => AuthRepositoryImpl(serviceLocator()),
     )
+    //UseCases
     ..registerFactory(() => GoogleSignInUC(serviceLocator()))
     ..registerFactory(() => GetCurrentUser(serviceLocator()))
     ..registerFactory(() => SignOut(serviceLocator()))
+    //Blocs
     ..registerLazySingleton(
       () => AuthBloc(
         googleSignIn: serviceLocator(),
         getCurrentUser: serviceLocator(),
         signOut: serviceLocator(),
+      ),
+    );
+
+  // ---- Enrollment ----
+  serviceLocator
+    // DataSource
+    ..registerFactory<EnrollmentRemoteDataSource>(
+      () => EnrollmentRemoteDataSourceImpl(serviceLocator()),
+    )
+    //Repository
+    ..registerFactory<EnrollmentRepository>(
+      () => EnrollmentRepositoryImpl(serviceLocator()),
+    )
+    //UseCases
+    ..registerFactory(() => QueryClinicsPrefix(serviceLocator()))
+    ..registerFactory(() => CreatePendingClinic(serviceLocator()))
+    ..registerFactory(() => SetEnrollmentClinic(serviceLocator()))
+    ..registerFactory(() => GetEnrollment(serviceLocator()))
+    ..registerFactory(() => GetActiveEthics(serviceLocator()))
+    ..registerFactory(() => AcceptEthics(serviceLocator()))
+    //Blocs
+    ..registerFactory(
+      () => EnrollmentBloc(
+        queryClinics: serviceLocator(),
+        createClinic: serviceLocator(),
+        setClinic: serviceLocator(),
+        getEnrollment: serviceLocator(),
+        getActiveEthics: serviceLocator(),
+        acceptEthics: serviceLocator(),
       ),
     );
 }
