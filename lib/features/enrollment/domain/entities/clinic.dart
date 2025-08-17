@@ -1,4 +1,4 @@
-enum ClinicStatus { pending, active, blocked }
+import 'package:casi/core/enums.dart';
 
 class Clinic {
   final String id;

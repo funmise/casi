@@ -1,3 +1,4 @@
+import 'package:casi/core/enums.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:casi/features/enrollment/domain/entities/enrollment.dart';
 

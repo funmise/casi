@@ -1,4 +1,3 @@
-import 'package:casi/core/utils/fresh_auth.dart';
 import 'package:casi/core/widgets/loader.dart';
 import 'package:casi/features/enrollment/presentation/bloc/enrollment_bloc.dart';
 import 'package:casi/features/enrollment/presentation/pages/onboarding_flow.dart';

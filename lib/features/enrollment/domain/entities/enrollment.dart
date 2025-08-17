@@ -1,4 +1,4 @@
-enum EnrollmentStatus { awaitingEthics, active, suspended }
+import 'package:casi/core/enums.dart';
 
 class Enrollment {
   final String uid;
