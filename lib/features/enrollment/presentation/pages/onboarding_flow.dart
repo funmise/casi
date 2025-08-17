@@ -1,4 +1,6 @@
+import 'package:casi/features/auth/presentation/pages/sign_in_page.dart';
 import 'package:casi/features/enrollment/domain/entities/enrollment.dart';
+import 'package:casi/features/enrollment/presentation/pages/temp_dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:casi/core/widgets/loader.dart';
@@ -92,7 +94,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           }
 
           // Already active → (temporary) dashboard/home.
-          return const Scaffold(body: Center(child: Text('dashboard')));
+          return const TempDashboard();
         }
 
         // Safety: shouldn't hit because of buildWhen, but keep a neutral fallback.

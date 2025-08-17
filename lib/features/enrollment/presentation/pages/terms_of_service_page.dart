@@ -1,4 +1,5 @@
 // lib/features/enrollment/presentation/pages/terms_of_service_page.dart
+import 'package:casi/features/enrollment/presentation/pages/temp_dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -71,11 +72,10 @@ class _TermsOfServicePageState extends State<TermsOfServicePage> {
               ..showSnackBar(SnackBar(content: Text(state.message)));
           }
           if (state is EthicsAccepted) {
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                const SnackBar(content: Text('Enrollment activated!')),
-              );
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const TempDashboard()),
+              (route) => false,
+            );
           }
         },
         builder: (context, state) {
