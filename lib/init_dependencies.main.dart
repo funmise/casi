@@ -49,13 +49,11 @@ Future<void> initDependencies() async {
     )
     //UseCases
     ..registerFactory(() => GoogleSignInUC(serviceLocator()))
-    ..registerFactory(() => GetCurrentUser(serviceLocator()))
     ..registerFactory<IsSignOut>(() => SignOut(serviceLocator()))
     //Blocs
     ..registerLazySingleton(
       () => AuthBloc(
         googleSignIn: serviceLocator(),
-        getCurrentUser: serviceLocator(),
         signOut: serviceLocator(),
         watchUser: serviceLocator(),
       ),

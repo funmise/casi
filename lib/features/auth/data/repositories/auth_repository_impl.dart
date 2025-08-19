@@ -8,13 +8,6 @@ import 'package:casi/features/auth/data/data_sources/auth_remote_data_source.dar
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remote;
   AuthRepositoryImpl(this.remote);
-
-  @override
-  Future<Either<Failure, User?>> currentUser() {
-    final u = remote.currentUser();
-    return Future.value(Right(u));
-  }
-
   @override
   Future<Either<Failure, User>> signInWithGoogle() async {
     try {

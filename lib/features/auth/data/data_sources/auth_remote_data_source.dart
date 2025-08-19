@@ -5,7 +5,6 @@ import 'package:casi/core/error/exceptions.dart';
 import 'package:casi/core/user/data/models/user_model.dart';
 
 abstract interface class AuthRemoteDataSource {
-  UserModel? currentUser();
   Future<UserModel> signInWithGoogle();
   Future<void> signOut();
 }
@@ -19,12 +18,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required gsi.GoogleSignIn google,
   }) : _auth = auth,
        _google = google;
-
-  @override
-  UserModel? currentUser() {
-    final u = _auth.currentUser;
-    return u == null ? null : UserModel.fromFirebaseUser(u);
-  }
 
   @override
   Future<UserModel> signInWithGoogle() async {

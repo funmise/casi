@@ -6,7 +6,6 @@ import 'package:casi/core/user/domain/entities/user.dart';
 import 'package:casi/core/user/domain/entities/user_profile.dart';
 import 'package:casi/core/user/domain/extension/user_profile_x.dart';
 import 'package:casi/core/user/domain/usecases/watch_user.dart';
-import 'package:casi/features/auth/domain/usecases/get_current_user.dart';
 import 'package:casi/features/auth/domain/usecases/google_sign_in.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/foundation.dart';
@@ -23,11 +22,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   AuthBloc({
     required GoogleSignInUC googleSignIn,
-    required GetCurrentUser getCurrentUser,
     required IsSignOut signOut,
     required WatchUser watchUser,
   }) : _googleSignIn = googleSignIn,
-       // _getCurrentUser = getCurrentUser,
        _signOut = signOut,
        _watchUser = watchUser,
        super(AuthInitial()) {
@@ -35,16 +32,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthGoogleRequested>(_onGoogle);
     on<AuthSignedOut>(_onSignOut);
   }
-
-  // Future<void> _onCheck(AuthCheckRequested e, Emitter<AuthState> emit) async {
-  //   emit(AuthLoading());
-  //   final res = await _getCurrentUser(NoParams());
-  //   res.fold(
-  //     (f) => emit(AuthFailure(f.message)),
-  //     (u) =>
-  //         u == null ? emit(AuthUnauthenticated()) : emit(AuthAuthenticated(u)),
-  //   );
-  // }
 
   // Starts watching the user stream and maps it to auth states.
   Future<void> _onCheck(
