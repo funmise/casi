@@ -4,7 +4,7 @@ import 'package:casi/features/enrollment/presentation/pages/onboarding_flow.dart
 import 'package:casi/init_dependencies.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'core/cubits/app_user/app_user_cubit.dart';
+import 'core/user/cubit/user_cubit.dart';
 import 'core/theme/theme.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/pages/sign_in_page.dart';
@@ -21,7 +21,7 @@ void main() async {
         BlocProvider(
           create: (_) => serviceLocator<AuthBloc>()..add(AuthCheckRequested()),
         ),
-        BlocProvider(create: (_) => serviceLocator<AppUserCubit>()),
+        BlocProvider(create: (_) => serviceLocator<UserCubit>()),
       ],
       child: const CASIApp(),
     ),

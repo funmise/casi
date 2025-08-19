@@ -3,7 +3,7 @@ import 'package:casi/core/enums.dart';
 class Enrollment {
   final String uid;
   final String clinicId;
-  final EnrollmentStatus status;
+  final EnrollmentStatus? status;
   final String? ethicsVersion;
   final DateTime? ethicsAcceptedAt;
   final int? avgDogsPerWeek;

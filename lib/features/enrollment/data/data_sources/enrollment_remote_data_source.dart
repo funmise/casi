@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:casi/core/error/exceptions.dart';
-import 'package:casi/features/enrollment/data/models/clinic_model.dart';
-import 'package:casi/features/enrollment/data/models/enrollment_model.dart';
+import 'package:casi/core/user/data/models/clinic_model.dart';
+import 'package:casi/core/user/data/models/enrollment_model.dart';
 import 'package:casi/features/enrollment/data/models/ethics_model.dart';
 
 abstract interface class EnrollmentRemoteDataSource {

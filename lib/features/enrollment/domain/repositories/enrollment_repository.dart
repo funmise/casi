@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:casi/core/error/failures.dart';
-import 'package:casi/features/enrollment/domain/entities/clinic.dart';
-import 'package:casi/features/enrollment/domain/entities/enrollment.dart';
+import 'package:casi/core/user/domain/entities/clinic.dart';
+import 'package:casi/core/user/domain/entities/enrollment.dart';
 import 'package:casi/features/enrollment/domain/entities/ethics.dart';
 
 abstract interface class EnrollmentRepository {

@@ -8,7 +8,7 @@ import 'package:casi/core/theme/app_pallete.dart';
 import 'package:casi/core/widgets/primary_button.dart';
 import 'package:casi/core/widgets/primary_text_field.dart';
 import 'package:casi/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:casi/features/enrollment/domain/entities/clinic.dart';
+import 'package:casi/core/user/domain/entities/clinic.dart';
 import 'package:casi/features/enrollment/presentation/bloc/enrollment_bloc.dart';
 import 'terms_of_service_page.dart';
 

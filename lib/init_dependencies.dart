@@ -1,3 +1,8 @@
+import 'package:casi/core/usecase/usecase.dart';
+import 'package:casi/core/user/data/data_sources/user_remote_data_source.dart';
+import 'package:casi/core/user/data/repositories/user_repository_impl.dart';
+import 'package:casi/core/user/domain/repositories/user_repository.dart';
+import 'package:casi/core/user/domain/usecases/watch_user.dart';
 import 'package:casi/features/enrollment/data/data_sources/enrollment_remote_data_source.dart';
 import 'package:casi/features/enrollment/data/repositories/enrollment_repository_impl.dart';
 import 'package:casi/features/enrollment/domain/repositories/enrollment_repository.dart';
@@ -15,7 +20,7 @@ import 'package:get_it/get_it.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:google_sign_in/google_sign_in.dart';
 
-import 'core/cubits/app_user/app_user_cubit.dart';
+import 'core/user/cubit/user_cubit.dart';
 import 'features/auth/data/data_sources/auth_remote_data_source.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';

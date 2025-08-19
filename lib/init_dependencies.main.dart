@@ -13,8 +13,26 @@ Future<void> initDependencies() async {
     ..registerLazySingleton<FirebaseFirestore>(() => FirebaseFirestore.instance)
     ..registerLazySingleton<GoogleSignIn>(() => GoogleSignIn.instance);
 
-  // Core
-  serviceLocator.registerLazySingleton(() => AppUserCubit());
+  // ---- Core ----
+  // app-user: remote data source + repo + usecase + cubit
+  serviceLocator.registerLazySingleton<UserRemoteDataSource>(
+    () => UserRemoteDataSourceImpl(
+      auth: serviceLocator<fa.FirebaseAuth>(),
+      db: serviceLocator<FirebaseFirestore>(),
+    ),
+  );
+
+  serviceLocator.registerLazySingleton<UserRepository>(
+    () => UserRepositoryImpl(serviceLocator<UserRemoteDataSource>()),
+  );
+
+  serviceLocator.registerLazySingleton<WatchUser>(
+    () => WatchUser(serviceLocator<UserRepository>()),
+  );
+
+  serviceLocator.registerFactory<UserCubit>(
+    () => UserCubit(watch: serviceLocator(), signOut: serviceLocator()),
+  );
 
   // ---- Auth ----
   serviceLocator
@@ -32,13 +50,14 @@ Future<void> initDependencies() async {
     //UseCases
     ..registerFactory(() => GoogleSignInUC(serviceLocator()))
     ..registerFactory(() => GetCurrentUser(serviceLocator()))
-    ..registerFactory(() => SignOut(serviceLocator()))
+    ..registerFactory<IsSignOut>(() => SignOut(serviceLocator()))
     //Blocs
     ..registerLazySingleton(
       () => AuthBloc(
         googleSignIn: serviceLocator(),
         getCurrentUser: serviceLocator(),
         signOut: serviceLocator(),
+        watchUser: serviceLocator(),
       ),
     );
 

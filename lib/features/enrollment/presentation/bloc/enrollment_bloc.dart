@@ -1,5 +1,5 @@
-import 'package:casi/features/enrollment/domain/entities/clinic.dart';
-import 'package:casi/features/enrollment/domain/entities/enrollment.dart';
+import 'package:casi/core/user/domain/entities/clinic.dart';
+import 'package:casi/core/user/domain/entities/enrollment.dart';
 import 'package:casi/features/enrollment/domain/entities/ethics.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';

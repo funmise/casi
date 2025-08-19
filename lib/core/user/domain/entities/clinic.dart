@@ -6,8 +6,8 @@ class Clinic {
   final String? province;
   final String? city;
   final int? avgDogsPerWeek;
-  final ClinicStatus status;
-  final DateTime createdAt;
+  final ClinicStatus? status;
+  final DateTime? createdAt;
 
   const Clinic({
     required this.id,
@@ -16,6 +16,6 @@ class Clinic {
     this.city,
     this.avgDogsPerWeek,
     required this.status,
-    required this.createdAt,
+    this.createdAt,
   });
 }

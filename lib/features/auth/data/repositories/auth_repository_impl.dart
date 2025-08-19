@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:casi/core/error/exceptions.dart';
 import 'package:casi/core/error/failures.dart';
-import 'package:casi/features/auth/domain/entities/user.dart';
+import 'package:casi/core/user/domain/entities/user.dart';
 import 'package:casi/features/auth/domain/repositories/auth_repository.dart';
 import 'package:casi/features/auth/data/data_sources/auth_remote_data_source.dart';
 
@@ -10,13 +10,9 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this.remote);
 
   @override
-  Future<Either<Failure, User?>> currentUser() async {
-    try {
-      final u = await remote.currentUser();
-      return right(u);
-    } on ServerException catch (e) {
-      return left(Failure(e.message));
-    }
+  Future<Either<Failure, User?>> currentUser() {
+    final u = remote.currentUser();
+    return Future.value(Right(u));
   }
 
   @override

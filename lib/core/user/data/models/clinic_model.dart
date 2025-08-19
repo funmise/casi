@@ -1,6 +1,6 @@
 import 'package:casi/core/enums.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:casi/features/enrollment/domain/entities/clinic.dart';
+import 'package:casi/core/user/domain/entities/clinic.dart';
 
 class ClinicModel extends Clinic {
   const ClinicModel({
@@ -14,9 +14,9 @@ class ClinicModel extends Clinic {
   });
 
   factory ClinicModel.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
-    final d = doc.data()!;
+    final data = doc.data()!;
     ClinicStatus status;
-    switch ((d['status'] as String)) {
+    switch ((data['status'] as String)) {
       case 'active':
         status = ClinicStatus.active;
         break;
@@ -26,24 +26,18 @@ class ClinicModel extends Clinic {
       default:
         status = ClinicStatus.pending;
     }
-    final ts = d['createdAt'];
+    final createdAt = data['createdAt'];
     return ClinicModel(
       id: doc.id,
-      name: d['name'] as String,
-      province: d['province'] as String?,
-      city: d['city'] as String?,
-      avgDogsPerWeek: (d['avgDogsPerWeek'] as num?)?.toInt(),
+      name: data['name'] as String,
+      province: data['province'] as String?,
+      city: data['city'] as String?,
+      avgDogsPerWeek: (data['avgDogsPerWeek'] as num?)?.toInt(),
       status: status,
-      createdAt: ts is Timestamp ? ts.toDate() : DateTime.now(),
+      createdAt: createdAt is Timestamp ? createdAt.toDate() : null,
     );
   }
 
-  Map<String, dynamic> toMapForCreate() => {
-    'name': name,
-    'nameLower': name.toLowerCase(),
-    'province': province,
-    'city': city,
-    'status': 'pending',
-    'createdAt': FieldValue.serverTimestamp(),
-  };
+  factory ClinicModel.empty() =>
+      const ClinicModel(id: '', name: '', status: null, createdAt: null);
 }

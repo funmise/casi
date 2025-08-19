@@ -1,18 +1,19 @@
 import 'package:casi/core/widgets/loader.dart';
-import 'package:casi/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:casi/features/auth/presentation/pages/sign_in_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:casi/core/user/cubit/user_cubit.dart';
+import 'package:casi/core/user/cubit/user_state.dart';
 
 class TempDashboard extends StatelessWidget {
   const TempDashboard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
+    return BlocBuilder<UserCubit, UserState>(
       builder: (context, state) {
-        if (state is AuthAuthenticated) {
-          // For now, just show a simple “logged in” screen
+        if (state is UserReady) {
+          final u = state.user;
           return Scaffold(
             appBar: AppBar(title: const Text('CASI')),
             body: Center(
@@ -20,15 +21,14 @@ class TempDashboard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Hello, ${state.user.name ?? 'clinician'}',
+                    'Hello, ${u.name ?? 'clinician'}',
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 16),
-                  Text(state.user.email),
+                  Text(u.email),
                   const SizedBox(height: 32),
                   ElevatedButton(
-                    onPressed: () =>
-                        context.read<AuthBloc>().add(AuthSignedOut()),
+                    onPressed: () => context.read<UserCubit>().signOut(),
                     child: const Text('Sign out'),
                   ),
                 ],
@@ -36,9 +36,19 @@ class TempDashboard extends StatelessWidget {
             ),
           );
         }
-        if (state is AuthLoading) {
+
+        if (state is UserLoading || state is UserInitial) {
           return const Scaffold(body: Loader());
         }
+
+        if (state is UserError) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('CASI')),
+            body: Center(child: Text(state.message)),
+          );
+        }
+
+        // AppUserUnauthenticated
         return const SignInPage();
       },
     );

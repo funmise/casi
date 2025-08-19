@@ -1,5 +1,4 @@
 import 'package:casi/core/enums.dart';
-import 'package:casi/features/enrollment/domain/entities/enrollment.dart';
 import 'package:casi/features/enrollment/presentation/pages/temp_dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

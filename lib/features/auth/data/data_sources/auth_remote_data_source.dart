@@ -2,10 +2,10 @@ import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:google_sign_in/google_sign_in.dart' as gsi;
 
 import 'package:casi/core/error/exceptions.dart';
-import 'package:casi/features/auth/data/models/user_model.dart';
+import 'package:casi/core/user/data/models/user_model.dart';
 
 abstract interface class AuthRemoteDataSource {
-  Future<UserModel?> currentUser();
+  UserModel? currentUser();
   Future<UserModel> signInWithGoogle();
   Future<void> signOut();
 }
@@ -20,18 +20,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }) : _auth = auth,
        _google = google;
 
-  UserModel _map(fa.User u) => UserModel(
-    id: u.uid,
-    email: u.email ?? '',
-    name: u
-        .displayName, // may be null the very first Apple login; Google usually sets it
-    createdAt: u.metadata.creationTime,
-  );
-
   @override
-  Future<UserModel?> currentUser() async {
+  UserModel? currentUser() {
     final u = _auth.currentUser;
-    return u == null ? null : _map(u);
+    return u == null ? null : UserModel.fromFirebaseUser(u);
   }
 
   @override
@@ -56,7 +48,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final fa.User? u = cred.user;
       if (u == null) throw ServerException('No user returned');
 
-      return _map(u);
+      return UserModel.fromFirebaseUser(u);
     } on gsi.GoogleSignInException catch (e) {
       final code = e.code;
       String msg;
@@ -73,6 +65,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       throw ServerException(msg);
     } on fa.FirebaseAuthException catch (e) {
       throw ServerException(e.message ?? 'Auth error');
+    } on ServerException {
+      rethrow;
     } catch (e) {
       throw ServerException(e.toString());
     }

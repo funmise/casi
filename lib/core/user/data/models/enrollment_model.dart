@@ -1,6 +1,6 @@
 import 'package:casi/core/enums.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:casi/features/enrollment/domain/entities/enrollment.dart';
+import 'package:casi/core/user/domain/entities/enrollment.dart';
 
 class EnrollmentModel extends Enrollment {
   const EnrollmentModel({
@@ -13,9 +13,9 @@ class EnrollmentModel extends Enrollment {
   });
 
   factory EnrollmentModel.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
-    final d = doc.data()!;
+    final data = doc.data()!;
     EnrollmentStatus status;
-    switch ((d['status'] as String)) {
+    switch ((data['status'] as String)) {
       case 'active':
         status = EnrollmentStatus.active;
         break;
@@ -26,14 +26,19 @@ class EnrollmentModel extends Enrollment {
         status = EnrollmentStatus.awaitingEthics;
     }
 
-    final ts = d['ethicsAcceptedAt'];
+    final ethicsAcceptedAt = data['ethicsAcceptedAt'];
     return EnrollmentModel(
       uid: doc.id,
-      clinicId: d['clinicId'] as String,
+      clinicId: data['clinicId'] as String,
       status: status,
-      ethicsVersion: d['ethicsVersion'] as String?,
-      ethicsAcceptedAt: ts is Timestamp ? ts.toDate() : null,
-      avgDogsPerWeek: (d['avgDogsPerWeek'] as num?)?.toInt(),
+      ethicsVersion: data['ethicsVersion'] as String?,
+      ethicsAcceptedAt: ethicsAcceptedAt is Timestamp
+          ? ethicsAcceptedAt.toDate()
+          : null,
+      avgDogsPerWeek: (data['avgDogsPerWeek'] as num?)?.toInt(),
     );
   }
+
+  factory EnrollmentModel.empty() =>
+      const EnrollmentModel(uid: '', clinicId: '', status: null);
 }

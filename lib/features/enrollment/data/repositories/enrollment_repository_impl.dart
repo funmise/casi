@@ -1,8 +1,8 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:casi/core/error/exceptions.dart';
 import 'package:casi/core/error/failures.dart';
-import 'package:casi/features/enrollment/domain/entities/clinic.dart';
-import 'package:casi/features/enrollment/domain/entities/enrollment.dart';
+import 'package:casi/core/user/domain/entities/clinic.dart';
+import 'package:casi/core/user/domain/entities/enrollment.dart';
 import 'package:casi/features/enrollment/domain/entities/ethics.dart';
 import 'package:casi/features/enrollment/domain/repositories/enrollment_repository.dart';
 import 'package:casi/features/enrollment/data/data_sources/enrollment_remote_data_source.dart';
