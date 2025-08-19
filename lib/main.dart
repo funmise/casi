@@ -1,3 +1,4 @@
+import 'package:casi/core/enums.dart';
 import 'package:casi/core/widgets/loader.dart';
 import 'package:casi/features/enrollment/presentation/bloc/enrollment_bloc.dart';
 import 'package:casi/features/enrollment/presentation/pages/onboarding_flow.dart';
@@ -8,8 +9,6 @@ import 'core/user/cubit/user_cubit.dart';
 import 'core/theme/theme.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/pages/sign_in_page.dart';
-
-enum AuthStatus { authed, loading, unauthed }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
