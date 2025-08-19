@@ -21,7 +21,7 @@ void main() async {
         BlocProvider(
           create: (_) => serviceLocator<AuthBloc>()..add(AuthCheckRequested()),
         ),
-        BlocProvider(create: (_) => serviceLocator<UserCubit>()),
+        BlocProvider(create: (_) => serviceLocator<UserCubit>()..resubscribe()),
       ],
       child: const CASIApp(),
     ),

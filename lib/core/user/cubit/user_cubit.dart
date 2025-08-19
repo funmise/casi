@@ -16,9 +16,7 @@ class UserCubit extends Cubit<UserState> {
   UserCubit({required WatchUser watch, required IsSignOut signOut})
     : _watch = watch,
       _signOut = signOut,
-      super(UserInitial()) {
-    _subscribe();
-  }
+      super(UserInitial());
 
   void _subscribe() {
     emit(UserLoading());
