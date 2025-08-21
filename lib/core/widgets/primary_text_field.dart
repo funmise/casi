@@ -42,7 +42,7 @@ class PrimaryTextField extends StatelessWidget {
         hintText: hint,
         hintStyle: const TextStyle(color: AppPallete.white),
         filled: true,
-        fillColor: AppPallete.black.withOpacity(.15),
+        fillColor: AppPallete.black.withValues(alpha: .15),
         suffixIcon: suffix,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
@@ -50,11 +50,11 @@ class PrimaryTextField extends StatelessWidget {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppPallete.white.withOpacity(.3)),
+          borderSide: BorderSide(color: AppPallete.white.withValues(alpha: .3)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppPallete.white.withOpacity(.3)),
+          borderSide: BorderSide(color: AppPallete.white.withValues(alpha: .3)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

@@ -1,4 +1,3 @@
-// lib/features/enrollment/presentation/pages/terms_of_service_page.dart
 import 'package:casi/core/user/cubit/user_cubit.dart';
 import 'package:casi/core/user/cubit/user_state.dart';
 import 'package:casi/core/pages/temp_dashboard.dart';
@@ -8,7 +7,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:casi/core/theme/app_pallete.dart';
 import 'package:casi/core/widgets/loader.dart';
 import 'package:casi/core/widgets/primary_button.dart';
-import 'package:casi/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:casi/features/enrollment/presentation/bloc/enrollment_bloc.dart';
 
 class TermsOfServicePage extends StatefulWidget {
@@ -76,7 +74,7 @@ class _TermsOfServicePageState extends State<TermsOfServicePage> {
           if (state is EthicsAccepted) {
             Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(builder: (_) => const TempDashboard()),
-              (route) => route.isFirst,
+              (route) => false,
             );
           }
         },
@@ -127,7 +125,7 @@ class _TermsOfServicePageState extends State<TermsOfServicePage> {
                       Expanded(
                         child: Container(
                           decoration: BoxDecoration(
-                            color: AppPallete.black.withOpacity(.12),
+                            color: AppPallete.black.withValues(alpha: .12),
                             borderRadius: BorderRadius.circular(18),
                           ),
                           child: Column(
