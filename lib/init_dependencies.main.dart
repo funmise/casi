@@ -51,7 +51,7 @@ Future<void> initDependencies() async {
     ..registerFactory(() => GoogleSignInUC(serviceLocator()))
     ..registerFactory<IsSignOut>(() => SignOut(serviceLocator()))
     //Blocs
-    ..registerLazySingleton(
+    ..registerFactory(
       () => AuthBloc(
         googleSignIn: serviceLocator(),
         signOut: serviceLocator(),

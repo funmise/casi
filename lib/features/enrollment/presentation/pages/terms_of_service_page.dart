@@ -1,4 +1,6 @@
 // lib/features/enrollment/presentation/pages/terms_of_service_page.dart
+import 'package:casi/core/user/cubit/user_cubit.dart';
+import 'package:casi/core/user/cubit/user_state.dart';
 import 'package:casi/features/enrollment/presentation/pages/temp_dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -50,13 +52,13 @@ class _TermsOfServicePageState extends State<TermsOfServicePage> {
   }
 
   void _accept() {
-    final auth = context.read<AuthBloc>().state;
-    if (auth is! AuthAuthenticated) return;
+    final userState = context.read<UserCubit>().state;
+    if (userState is! UserReady) return;
 
     final st = context.read<EnrollmentBloc>().state;
     if (st is EthicsLoaded) {
       context.read<EnrollmentBloc>().add(
-        AcceptEthicsEvent(uid: auth.user.id, version: st.ethics.version),
+        AcceptEthicsEvent(uid: userState.user.uid, version: st.ethics.version),
       );
     }
   }
@@ -74,7 +76,7 @@ class _TermsOfServicePageState extends State<TermsOfServicePage> {
           if (state is EthicsAccepted) {
             Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(builder: (_) => const TempDashboard()),
-              (route) => false,
+              (route) => route.isFirst,
             );
           }
         },

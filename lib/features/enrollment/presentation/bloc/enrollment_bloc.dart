@@ -78,7 +78,7 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
       return;
     }
     final lower = q.toLowerCase();
-    final res = await _queryClinics(ParamsQueryClinic(q));
+    final res = await _queryClinics(ParamsQueryClinic(q, limit: e.limit));
     res.fold(
       (l) => emit(EnrollmentError(l.message)),
       (r) => emit(ClinicSearchSuccess(r, lower)),

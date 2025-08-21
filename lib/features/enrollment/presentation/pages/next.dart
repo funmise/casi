@@ -1,13 +1,12 @@
 import 'package:casi/core/widgets/loader.dart';
 import 'package:casi/features/auth/presentation/pages/sign_in_page.dart';
-import 'package:casi/features/enrollment/presentation/pages/next.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:casi/core/user/cubit/user_cubit.dart';
 import 'package:casi/core/user/cubit/user_state.dart';
 
-class TempDashboard extends StatelessWidget {
-  const TempDashboard({super.key});
+class Nextboard extends StatelessWidget {
+  const Nextboard({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +27,7 @@ class TempDashboard extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(u.email),
                   const SizedBox(height: 32),
+
                   ElevatedButton(
                     onPressed: () => context.read<UserCubit>().signOut(),
                     child: const Text('Sign out'),
@@ -35,11 +35,9 @@ class TempDashboard extends StatelessWidget {
 
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const Nextboard()),
-                      );
+                      Navigator.of(context).pop();
                     },
-                    child: const Text("Go to next"),
+                    child: const Text("Go to Dashboard"),
                   ),
                 ],
               ),
@@ -59,7 +57,13 @@ class TempDashboard extends StatelessWidget {
         }
 
         // AppUserUnauthenticated
-        return const Center(child: Text('it stays'));
+        // print("secer");
+        // return const Scaffold(
+        //   body: Center(child: Text('it stays')),
+        //   backgroundColor: Colors.green,
+        // );
+
+        return const SizedBox.shrink();
       },
     );
   }

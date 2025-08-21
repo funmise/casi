@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:casi/core/user/cubit/user_cubit.dart';
+import 'package:casi/core/user/cubit/user_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
@@ -22,7 +24,7 @@ class VerifyClinicPage extends StatefulWidget {
 class _VerifyClinicPageState extends State<VerifyClinicPage> {
   // visible inputs
   final _clinicCtrl = TextEditingController();
-  final _avgDogsCtrl = TextEditingController();
+  // final _avgDogsCtrl = TextEditingController();
   final _provinceCtrl = TextEditingController();
   final _cityCtrl = TextEditingController();
 
@@ -36,7 +38,7 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
   @override
   void dispose() {
     _clinicCtrl.dispose();
-    _avgDogsCtrl.dispose();
+    // _avgDogsCtrl.dispose();
     _provinceCtrl.dispose();
     _cityCtrl.dispose();
     // Close suggestions popup if open
@@ -52,7 +54,7 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
     final bloc = context.read<EnrollmentBloc>();
 
     // fire the debounced search into the BLoC
-    bloc.add(SearchClinicsEvent(q, limit: 10));
+    bloc.add(SearchClinicsEvent(q));
 
     // wait for the next ClinicSearchSuccess that matches this query
     List<Clinic> results = const <Clinic>[];
@@ -98,19 +100,19 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
     FocusScope.of(context).unfocus();
     _suggestionsCtrl.close();
 
-    final auth = context.read<AuthBloc>().state as AuthAuthenticated;
-    final uid = auth.user.id;
+    final userState = context.read<UserCubit>().state as UserReady;
+    final uid = userState.user.uid;
 
-    final avg = int.tryParse(
-      _avgDogsCtrl.text.trim().isEmpty ? '0' : _avgDogsCtrl.text,
-    );
+    // final avg = int.tryParse(
+    //   _avgDogsCtrl.text.trim().isEmpty ? '0' : _avgDogsCtrl.text,
+    // );
 
     if (_selectedClinic != null) {
       context.read<EnrollmentBloc>().add(
         SetClinicEvent(
           uid: uid,
           clinicId: _selectedClinic!.id,
-          avgDogsPerWeek: avg == 0 ? null : avg,
+          // avgDogsPerWeek: avg == 0 ? null : avg,
         ),
       );
     } else {
@@ -131,30 +133,33 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
   Widget build(BuildContext context) {
     return BlocListener<EnrollmentBloc, EnrollmentState>(
       listener: (context, state) {
-        if (state is ClinicCreated) {
-          final auth = context.read<AuthBloc>().state as AuthAuthenticated;
-          final uid = auth.user.id;
-          context.read<EnrollmentBloc>().add(
-            SetClinicEvent(
-              uid: uid,
-              clinicId: state.clinic.id,
-              avgDogsPerWeek: int.tryParse(
-                _avgDogsCtrl.text.trim().isEmpty ? '0' : _avgDogsCtrl.text,
-              ),
-            ),
-          );
-        }
-
         if (state is EnrollmentError) {
+          if (state.message == 'enrollment-not-found') {
+            return;
+          }
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
             ..showSnackBar(SnackBar(content: Text(state.message)));
         }
 
-        if (state is ClinicSetSuccess) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const TermsOfServicePage()),
+        if (state is ClinicCreated) {
+          final userState = context.read<UserCubit>().state as UserReady;
+          final uid = userState.user.uid;
+          context.read<EnrollmentBloc>().add(
+            SetClinicEvent(
+              uid: uid,
+              clinicId: state.clinic.id,
+              // avgDogsPerWeek: int.tryParse(
+              //   _avgDogsCtrl.text.trim().isEmpty ? '0' : _avgDogsCtrl.text,
+              // ),
+            ),
           );
+        }
+
+        if (state is ClinicSetSuccess) {
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const TermsOfServicePage()));
         }
       },
       child: Scaffold(
@@ -189,7 +194,7 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
                       const SizedBox(height: 24),
                       const Text(
                         "Enter your clinic's info below to verify your account",
-                        style: TextStyle(color: AppPallete.white),
+                        style: TextStyle(color: AppPallete.white, fontSize: 20),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 24),
@@ -288,12 +293,12 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
                       ),
                       const SizedBox(height: 12),
 
-                      PrimaryTextField(
-                        controller: _avgDogsCtrl,
-                        hint: 'Average number of Dogs Seen Per Week (optional)',
-                        keyboardType: TextInputType.number,
-                        suffix: const Icon(Icons.pets, color: AppPallete.white),
-                      ),
+                      // PrimaryTextField(
+                      //   controller: _avgDogsCtrl,
+                      //   hint: 'Average number of Dogs Seen Per Week (optional)',
+                      //   keyboardType: TextInputType.number,
+                      //   suffix: const Icon(Icons.pets, color: AppPallete.white),
+                      // ),
                       const SizedBox(height: 20),
 
                       PrimaryButton(label: 'Submit', onPressed: _submit),
