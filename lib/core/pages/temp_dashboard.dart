@@ -1,6 +1,6 @@
 import 'package:casi/core/widgets/loader.dart';
 import 'package:casi/features/auth/presentation/pages/sign_in_page.dart';
-import 'package:casi/features/enrollment/presentation/pages/next.dart';
+import 'package:casi/core/pages/next.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:casi/core/user/cubit/user_cubit.dart';

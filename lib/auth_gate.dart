@@ -6,7 +6,7 @@ import 'package:casi/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:casi/features/auth/presentation/pages/sign_in_page.dart';
 import 'package:casi/features/enrollment/presentation/bloc/enrollment_bloc.dart';
 import 'package:casi/features/enrollment/presentation/pages/onboarding_flow.dart';
-import 'package:casi/features/enrollment/presentation/pages/temp_dashboard.dart';
+import 'package:casi/core/pages/temp_dashboard.dart';
 import 'package:casi/features/enrollment/presentation/pages/verify_clinic_page.dart';
 import 'package:casi/init_dependencies.dart';
 import 'package:flutter/material.dart';

@@ -1,7 +1,7 @@
 // lib/features/enrollment/presentation/pages/terms_of_service_page.dart
 import 'package:casi/core/user/cubit/user_cubit.dart';
 import 'package:casi/core/user/cubit/user_state.dart';
-import 'package:casi/features/enrollment/presentation/pages/temp_dashboard.dart';
+import 'package:casi/core/pages/temp_dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
