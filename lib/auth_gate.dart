@@ -41,7 +41,14 @@ class _AuthGateState extends State<AuthGate> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<UserCubit, UserState>(
-      listenWhen: (p, c) => p.runtimeType != c.runtimeType,
+      listenWhen: (p, c) {
+        if (p.runtimeType != c.runtimeType) return true;
+        // also fire when enrollmentStatus changes while still UserReady
+        if (p is UserReady && c is UserReady) {
+          return p.user.enrollmentStatus != c.user.enrollmentStatus;
+        }
+        return false;
+      },
       listener: (context, state) {
         if (state is UserInitial || state is UserLoading) {
           _resetInnerTo(const Scaffold(body: Loader()), _Phase.loading);
@@ -57,15 +64,16 @@ class _AuthGateState extends State<AuthGate> {
             ),
             _Phase.unauth,
           );
-        } else if (state is UserReady) {
-          final needsOnboarding =
-              state.user.enrollmentStatus != EnrollmentStatus.active;
+        }
 
-          if (needsOnboarding) {
-            _resetInnerTo(const OnboardingFlow(), _Phase.onboarding);
-          } else {
-            _resetInnerTo(const TempDashboard(), _Phase.dashboard);
-          }
+        if (state is UserReady &&
+            state.user.enrollmentStatus != EnrollmentStatus.active) {
+          _resetInnerTo(const OnboardingFlow(), _Phase.onboarding);
+          return;
+        }
+
+        if (state is UserReady) {
+          _resetInnerTo(const TempDashboard(), _Phase.dashboard);
         }
       },
 

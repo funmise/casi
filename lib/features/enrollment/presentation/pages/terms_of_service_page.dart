@@ -71,12 +71,14 @@ class _TermsOfServicePageState extends State<TermsOfServicePage> {
               ..hideCurrentSnackBar()
               ..showSnackBar(SnackBar(content: Text(state.message)));
           }
-          if (state is EthicsAccepted) {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => const TempDashboard()),
-              (route) => false,
-            );
-          }
+          // if (state is EthicsAccepted) {
+          //   ////context.read<UserCubit>().resubscribe();
+
+          //   // Navigator.of(context).pushAndRemoveUntil(
+          //   //   MaterialPageRoute(builder: (_) => const TempDashboard()),
+          //   //   (route) => false,
+          //   // );
+          // }
         },
         builder: (context, state) {
           if (state is EnrollmentLoading || state is EnrollmentInitial) {
