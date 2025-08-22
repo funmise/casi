@@ -22,22 +22,19 @@ class VerifyClinicPage extends StatefulWidget {
 
 class _VerifyClinicPageState extends State<VerifyClinicPage> {
   // visible inputs
-  final _clinicCtrl = TextEditingController();
-  // final _avgDogsCtrl = TextEditingController();
   final _provinceCtrl = TextEditingController();
   final _cityCtrl = TextEditingController();
 
-  // typeahead refs (handy for syncing text)
+  // typeahead refs
   final _suggestionsCtrl = SuggestionsController<Clinic>();
   TextEditingController? _typeaheadCtrl;
   FocusNode? _typeaheadFocus;
+  String get _clinicName => _typeaheadCtrl?.text.trim() ?? '';
 
   Clinic? _selectedClinic;
 
   @override
   void dispose() {
-    _clinicCtrl.dispose();
-    // _avgDogsCtrl.dispose();
     _provinceCtrl.dispose();
     _cityCtrl.dispose();
     // Close suggestions popup if open
@@ -52,7 +49,7 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
     final lower = q.toLowerCase();
     final bloc = context.read<EnrollmentBloc>();
 
-    // fire the debounced search into the BLoC
+    // fire the search into the BLoC
     bloc.add(SearchClinicsEvent(q));
 
     // wait for the next ClinicSearchSuccess that matches this query
@@ -79,7 +76,6 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
   void _onPickClinic(Clinic c) {
     setState(() {
       _selectedClinic = c;
-      _clinicCtrl.text = c.name;
       _provinceCtrl.text = c.province ?? '';
       _cityCtrl.text = c.city ?? '';
     });
@@ -102,10 +98,6 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
     final userState = context.read<UserCubit>().state as UserReady;
     final uid = userState.user.uid;
 
-    // final avg = int.tryParse(
-    //   _avgDogsCtrl.text.trim().isEmpty ? '0' : _avgDogsCtrl.text,
-    // );
-
     if (_selectedClinic != null) {
       context.read<EnrollmentBloc>().add(
         SetClinicEvent(
@@ -118,7 +110,7 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
       // create pending first, then set enrollment clinic (handled in listener)
       context.read<EnrollmentBloc>().add(
         CreateClinicEvent(
-          name: _clinicCtrl.text.trim(),
+          name: _clinicName,
           province: _provinceCtrl.text.trim().isEmpty
               ? null
               : _provinceCtrl.text.trim(),
@@ -145,13 +137,7 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
           final userState = context.read<UserCubit>().state as UserReady;
           final uid = userState.user.uid;
           context.read<EnrollmentBloc>().add(
-            SetClinicEvent(
-              uid: uid,
-              clinicId: state.clinic.id,
-              // avgDogsPerWeek: int.tryParse(
-              //   _avgDogsCtrl.text.trim().isEmpty ? '0' : _avgDogsCtrl.text,
-              // ),
-            ),
+            SetClinicEvent(uid: uid, clinicId: state.clinic.id),
           );
         }
 
@@ -210,22 +196,12 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
                           _typeaheadCtrl ??= controller;
                           _typeaheadFocus ??= focusNode;
 
-                          // keep external controller in sync for "create pending"
-                          if (controller.text != _clinicCtrl.text) {
-                            controller.value = TextEditingValue(
-                              text: _clinicCtrl.text,
-                              selection: TextSelection.collapsed(
-                                offset: _clinicCtrl.text.length,
-                              ),
-                            );
-                          }
                           controller.addListener(() {
                             // typing invalidates previous selection
                             if (_selectedClinic != null &&
                                 _selectedClinic!.name != controller.text) {
                               setState(() => _selectedClinic = null);
                             }
-                            _clinicCtrl.text = controller.text;
                           });
 
                           return PrimaryTextField(
@@ -262,7 +238,7 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
                             style: TextStyle(color: AppPallete.white),
                           ),
                           subtitle: Text(
-                            'Press Submit to create "${_clinicCtrl.text}"',
+                            'Press Submit to create "$_clinicName"',
                             style: const TextStyle(color: AppPallete.white),
                           ),
                         ),
@@ -292,12 +268,6 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
                       ),
                       const SizedBox(height: 12),
 
-                      // PrimaryTextField(
-                      //   controller: _avgDogsCtrl,
-                      //   hint: 'Average number of Dogs Seen Per Week (optional)',
-                      //   keyboardType: TextInputType.number,
-                      //   suffix: const Icon(Icons.pets, color: AppPallete.white),
-                      // ),
                       const SizedBox(height: 20),
 
                       PrimaryButton(label: 'Submit', onPressed: _submit),
