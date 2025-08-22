@@ -100,11 +100,7 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
 
     if (_selectedClinic != null) {
       context.read<EnrollmentBloc>().add(
-        SetClinicEvent(
-          uid: uid,
-          clinicId: _selectedClinic!.id,
-          // avgDogsPerWeek: avg == 0 ? null : avg,
-        ),
+        SetClinicEvent(uid: uid, clinicId: _selectedClinic!.id),
       );
     } else {
       // create pending first, then set enrollment clinic (handled in listener)

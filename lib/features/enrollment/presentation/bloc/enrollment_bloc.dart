@@ -105,11 +105,7 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
   ) async {
     emit(EnrollmentLoading());
     final res = await _setClinic(
-      ParamsSetClinic(
-        uid: e.uid,
-        clinicId: e.clinicId,
-        avgDogsPerWeek: e.avgDogsPerWeek,
-      ),
+      ParamsSetClinic(uid: e.uid, clinicId: e.clinicId),
     );
     res.fold(
       (l) => emit(EnrollmentError(l.message)),

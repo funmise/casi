@@ -8,7 +8,6 @@ class ClinicModel extends Clinic {
     required super.name,
     super.province,
     super.city,
-    super.avgDogsPerWeek,
     required super.status,
     required super.createdAt,
   });
@@ -32,7 +31,6 @@ class ClinicModel extends Clinic {
       name: data['name'] as String,
       province: data['province'] as String?,
       city: data['city'] as String?,
-      avgDogsPerWeek: (data['avgDogsPerWeek'] as num?)?.toInt(),
       status: status,
       createdAt: createdAt is Timestamp ? createdAt.toDate() : null,
     );

@@ -6,7 +6,6 @@ class Enrollment {
   final EnrollmentStatus? status;
   final String? ethicsVersion;
   final DateTime? ethicsAcceptedAt;
-  final int? avgDogsPerWeek;
 
   const Enrollment({
     required this.uid,
@@ -14,6 +13,5 @@ class Enrollment {
     required this.status,
     this.ethicsVersion,
     this.ethicsAcceptedAt,
-    this.avgDogsPerWeek,
   });
 }

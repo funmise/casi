@@ -34,14 +34,9 @@ class CreateClinicEvent extends EnrollmentEvent {
 class SetClinicEvent extends EnrollmentEvent {
   final String uid;
   final String clinicId;
-  final int? avgDogsPerWeek;
-  const SetClinicEvent({
-    required this.uid,
-    required this.clinicId,
-    this.avgDogsPerWeek,
-  });
+  const SetClinicEvent({required this.uid, required this.clinicId});
   @override
-  List<Object?> get props => [uid, clinicId, avgDogsPerWeek];
+  List<Object?> get props => [uid, clinicId];
 }
 
 class LoadEthicsEvent extends EnrollmentEvent {

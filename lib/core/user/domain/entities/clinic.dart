@@ -5,7 +5,6 @@ class Clinic {
   final String name;
   final String? province;
   final String? city;
-  final int? avgDogsPerWeek;
   final ClinicStatus? status;
   final DateTime? createdAt;
 
@@ -14,7 +13,6 @@ class Clinic {
     required this.name,
     this.province,
     this.city,
-    this.avgDogsPerWeek,
     required this.status,
     this.createdAt,
   });

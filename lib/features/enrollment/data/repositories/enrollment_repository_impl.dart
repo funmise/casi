@@ -46,14 +46,9 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
   Future<Either<Failure, void>> setEnrollmentClinic({
     required String uid,
     required String clinicId,
-    int? avgDogsPerWeek,
   }) async {
     try {
-      await remote.setEnrollmentClinic(
-        uid: uid,
-        clinicId: clinicId,
-        avgDogsPerWeek: avgDogsPerWeek,
-      );
+      await remote.setEnrollmentClinic(uid: uid, clinicId: clinicId);
       return right(null);
     } on ServerException catch (e) {
       return left(Failure(e.message));

@@ -9,21 +9,12 @@ class SetEnrollmentClinic implements UseCase<void, ParamsSetClinic> {
 
   @override
   Future<Either<Failure, void>> call(ParamsSetClinic p) {
-    return repo.setEnrollmentClinic(
-      uid: p.uid,
-      clinicId: p.clinicId,
-      avgDogsPerWeek: p.avgDogsPerWeek,
-    );
+    return repo.setEnrollmentClinic(uid: p.uid, clinicId: p.clinicId);
   }
 }
 
 class ParamsSetClinic {
   final String uid;
   final String clinicId;
-  final int? avgDogsPerWeek;
-  ParamsSetClinic({
-    required this.uid,
-    required this.clinicId,
-    this.avgDogsPerWeek,
-  });
+  ParamsSetClinic({required this.uid, required this.clinicId});
 }

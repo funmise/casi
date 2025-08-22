@@ -11,11 +11,7 @@ abstract interface class EnrollmentRemoteDataSource {
     String? province,
     String? city,
   });
-  setEnrollmentClinic({
-    required String uid,
-    required String clinicId,
-    int? avgDogsPerWeek,
-  });
+  setEnrollmentClinic({required String uid, required String clinicId});
   Future<EnrollmentModel> getEnrollment(String uid);
   Future<EthicsModel> getActiveEthics();
   Future<void> acceptEthics({required String uid, required String version});
@@ -25,6 +21,20 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
   final FirebaseFirestore _db;
   EnrollmentRemoteDataSourceImpl(this._db);
 
+  // ---------- helpers ----------
+  CollectionReference<Map<String, dynamic>> _userEnrollments(String uid) =>
+      _db.collection('users').doc(uid).collection('enrollments');
+
+  Future<QueryDocumentSnapshot<Map<String, dynamic>>?> _latestCurrentEnrollment(
+    String uid,
+  ) async {
+    final snap = await _userEnrollments(
+      uid,
+    ).orderBy('createdAt', descending: true).limit(1).get();
+    return snap.docs.isEmpty ? null : snap.docs.first;
+  }
+
+  // ---------------- API ----------------
   @override
   Future<List<ClinicModel>> queryClinicsPrefix(String q, {int? limit}) async {
     try {
@@ -87,13 +97,40 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
   Future<void> setEnrollmentClinic({
     required String uid,
     required String clinicId,
-    int? avgDogsPerWeek,
   }) async {
     try {
-      await _db.collection('enrollments').doc(uid).set({
+      final clinicSnap = await _db.collection('clinics').doc(clinicId).get();
+      if (!clinicSnap.exists) {
+        throw ServerException('clinic-not-found');
+      }
+      final clinicData = clinicSnap.data() ?? {};
+      final resolvedClinicName = (clinicData['name'] as String?) ?? 'Unknown';
+
+      final latest = await _latestCurrentEnrollment(uid);
+
+      if (latest != null) {
+        // If the newest enrollment is still pending, just update it.
+        final status = latest.data()['status'] as String? ?? 'awaitingEthics';
+        if (status == 'awaitingEthics') {
+          await latest.reference.update({
+            'clinicId': clinicId,
+            'clinicName': resolvedClinicName,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+          return;
+        }
+        // If it’s 'active' (or anything else), fall through and create a new one.
+      }
+
+      // No existing (pending) enrollment → create a new one
+      // Create a NEW enrollment doc under users/{uid}/enrollments/{autoId}
+      final ref = _userEnrollments(uid).doc();
+      await ref.set({
         'clinicId': clinicId,
+        'clinicName': resolvedClinicName,
         'status': 'awaitingEthics',
-        if (avgDogsPerWeek != null) 'avgDogsPerWeek': avgDogsPerWeek,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } on FirebaseException catch (e) {
       throw ServerException(
@@ -109,11 +146,11 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
   @override
   Future<EnrollmentModel> getEnrollment(String uid) async {
     try {
-      final doc = await _db.collection('enrollments').doc(uid).get();
-      if (!doc.exists) {
+      final latest = await _latestCurrentEnrollment(uid);
+      if (latest == null) {
         throw ServerException('enrollment-not-found');
       }
-      return EnrollmentModel.fromDoc(doc);
+      return EnrollmentModel.fromDoc(latest);
     } on FirebaseException catch (e) {
       throw ServerException(
         e.message ?? 'Firestore error while fetching enrollment.',
@@ -155,11 +192,16 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
     required String version,
   }) async {
     try {
-      await _db.collection('enrollments').doc(uid).set({
+      final latest = await _latestCurrentEnrollment(uid);
+      if (latest == null) {
+        throw ServerException('enrollment-not-found');
+      }
+      await latest.reference.update({
         'ethicsVersion': version,
         'ethicsAcceptedAt': FieldValue.serverTimestamp(),
         'status': 'active',
-      }, SetOptions(merge: true));
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
     } on FirebaseException catch (e) {
       throw ServerException(
         e.message ?? 'Firestore error while accepting ethics.',

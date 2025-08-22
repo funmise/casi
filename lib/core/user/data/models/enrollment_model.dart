@@ -9,7 +9,6 @@ class EnrollmentModel extends Enrollment {
     required super.status,
     super.ethicsVersion,
     super.ethicsAcceptedAt,
-    super.avgDogsPerWeek,
   });
 
   factory EnrollmentModel.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
@@ -35,7 +34,6 @@ class EnrollmentModel extends Enrollment {
       ethicsAcceptedAt: ethicsAcceptedAt is Timestamp
           ? ethicsAcceptedAt.toDate()
           : null,
-      avgDogsPerWeek: (data['avgDogsPerWeek'] as num?)?.toInt(),
     );
   }
 

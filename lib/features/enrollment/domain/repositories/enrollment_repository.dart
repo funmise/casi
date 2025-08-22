@@ -21,7 +21,6 @@ abstract interface class EnrollmentRepository {
   Future<Either<Failure, void>> setEnrollmentClinic({
     required String uid,
     required String clinicId,
-    int? avgDogsPerWeek,
   });
 
   Future<Either<Failure, Enrollment>> getEnrollment(String uid);

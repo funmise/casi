@@ -22,6 +22,11 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
   }) : _auth = auth,
        _db = db;
 
+  // ---------------- helpers ----------------
+  CollectionReference<Map<String, dynamic>> _userEnrollments(String uid) =>
+      _db.collection('users').doc(uid).collection('enrollments');
+
+  // ---------------- API ----------------
   @override
   Stream<UserProfileModel?> watch() {
     try {
@@ -33,18 +38,22 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
             }
             final base = UserModel.fromFirebaseUser(user);
 
-            // --- Enrollment stream: (model, fromCache)
-            final enrollment$ = _db
-                .collection('enrollments')
-                .doc(user.uid)
-                .snapshots(includeMetadataChanges: true) // <-- important
-                .map(((snap) {
-                  final model = snap.exists
-                      ? EnrollmentModel.fromDoc(snap)
-                      : EnrollmentModel.empty();
-                  final fromCache = snap.metadata.isFromCache;
+            // --- Enrollment stream (model, fromCache)
+            final enrollment$ = _userEnrollments(user.uid)
+                .orderBy('createdAt', descending: true)
+                .limit(1)
+                .snapshots(includeMetadataChanges: true)
+                .map((qs) {
+                  final fromCache = qs.metadata.isFromCache;
+                  if (qs.docs.isEmpty) {
+                    return (
+                      model: EnrollmentModel.empty(),
+                      fromCache: fromCache,
+                    );
+                  }
+                  final model = EnrollmentModel.fromDoc(qs.docs.first);
                   return (model: model, fromCache: fromCache);
-                }))
+                })
                 .handleError((e) {
                   throw ServerException('Failed to fetch enrollment: $e');
                 });
@@ -62,13 +71,13 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
                   .collection('clinics')
                   .doc(clinicId)
                   .snapshots(includeMetadataChanges: true)
-                  .map(((snap) {
+                  .map((snap) {
                     final model = snap.exists
                         ? ClinicModel.fromDoc(snap)
                         : ClinicModel.empty();
                     final fromCache = snap.metadata.isFromCache;
                     return (model: model, fromCache: fromCache);
-                  }))
+                  })
                   .handleError((e) {
                     throw ServerException('Failed to fetch clinic: $e');
                   });
