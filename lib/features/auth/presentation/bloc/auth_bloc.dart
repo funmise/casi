@@ -40,15 +40,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
 
-    // Bloc manages the subscription; no manual StreamSubscription needed.
-    await emit.forEach<Either<Failure, UserProfile?>>(
+    await emit.forEach<Either<Failure, ({UserProfile? user, bool fromCache})>>(
       _watchUser(NoParams()),
-      onData: (either) => either.match(
-        (f) => AuthFailure(f.message),
-        (profile) => profile == null
-            ? AuthUnauthenticated()
-            : AuthAuthenticated(profile.toUser()),
-      ),
+      onData: (either) =>
+          either.match((f) => AuthFailure(f.message), (payload) {
+            final u = payload.user;
+            return u == null
+                ? AuthUnauthenticated()
+                : AuthAuthenticated(u.toUser());
+          }),
       onError: (e, __) => AuthFailure(e.toString()),
     );
   }

@@ -1,6 +1,8 @@
 import 'package:casi/core/user/domain/entities/user_profile.dart';
 
 class UserProfileModel extends UserProfile {
+  final bool fromCache;
+
   const UserProfileModel({
     required super.uid,
     required super.email,
@@ -14,5 +16,6 @@ class UserProfileModel extends UserProfile {
     super.clinicProvince,
     super.clinicCity,
     super.clinicStatus,
+    required this.fromCache,
   });
 }

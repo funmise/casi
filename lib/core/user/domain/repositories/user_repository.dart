@@ -3,5 +3,5 @@ import 'package:casi/core/user/domain/entities/user_profile.dart';
 import 'package:fpdart/fpdart.dart';
 
 abstract interface class UserRepository {
-  Stream<Either<Failure, UserProfile?>> watch();
+  Stream<Either<Failure, ({UserProfile? user, bool fromCache})>> watch();
 }

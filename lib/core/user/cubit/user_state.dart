@@ -15,9 +15,11 @@ class UserUnauthenticated extends UserState {}
 
 class UserReady extends UserState {
   final UserProfile user;
-  const UserReady(this.user);
+  final bool fromCache;
+  const UserReady(this.user, {this.fromCache = false});
+
   @override
-  List<Object?> get props => [user];
+  List<Object?> get props => [user, fromCache];
 }
 
 class UserError extends UserState {

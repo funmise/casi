@@ -33,42 +33,53 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
             }
             final base = UserModel.fromFirebaseUser(user);
 
-            // enrollment stream
+            // --- Enrollment stream: (model, fromCache)
             final enrollment$ = _db
                 .collection('enrollments')
                 .doc(user.uid)
-                .snapshots()
-                .map((enrollmentDoc) {
-                  if (!enrollmentDoc.exists) return EnrollmentModel.empty();
-                  return EnrollmentModel.fromDoc(enrollmentDoc);
-                })
+                .snapshots(includeMetadataChanges: true) // <-- important
+                .map(((snap) {
+                  final model = snap.exists
+                      ? EnrollmentModel.fromDoc(snap)
+                      : EnrollmentModel.empty();
+                  final fromCache = snap.metadata.isFromCache;
+                  return (model: model, fromCache: fromCache);
+                }))
                 .handleError((e) {
                   throw ServerException('Failed to fetch enrollment: $e');
                 });
 
-            // clinic stream
-            final clinic$ = enrollment$.switchMap((enrollment) {
-              if (enrollment.clinicId.isEmpty) {
-                return Stream<ClinicModel>.value(ClinicModel.empty());
+            // --- Clinic stream depends on enrollment; also (model, fromCache)
+            final clinic$ = enrollment$.switchMap((enr) {
+              final clinicId = enr.model.clinicId;
+              if (clinicId.isEmpty) {
+                return Stream<({ClinicModel model, bool fromCache})>.value((
+                  model: ClinicModel.empty(),
+                  fromCache: false,
+                ));
               }
               return _db
                   .collection('clinics')
-                  .doc(enrollment.clinicId)
-                  .snapshots()
-                  .map((clinicDoc) {
-                    if (!clinicDoc.exists) return ClinicModel.empty();
-                    return ClinicModel.fromDoc(clinicDoc);
-                  })
+                  .doc(clinicId)
+                  .snapshots(includeMetadataChanges: true)
+                  .map(((snap) {
+                    final model = snap.exists
+                        ? ClinicModel.fromDoc(snap)
+                        : ClinicModel.empty();
+                    final fromCache = snap.metadata.isFromCache;
+                    return (model: model, fromCache: fromCache);
+                  }))
                   .handleError((e) {
                     throw ServerException('Failed to fetch clinic: $e');
                   });
             });
 
-            // combine enrollment + clinic into domain entity
-            return Rx.combineLatest2(enrollment$, clinic$, (
-              enrollment,
-              clinic,
-            ) {
+            // --- Combine both and compute a single fromCache flag
+            return Rx.combineLatest2(enrollment$, clinic$, (enr, cl) {
+              final enrollment = enr.model;
+              final clinic = cl.model;
+              final fromCache = enr.fromCache || cl.fromCache;
+
               return UserProfileModel(
                 uid: base.id,
                 email: base.email,
@@ -84,6 +95,7 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
                 clinicProvince: clinic.province,
                 clinicCity: clinic.city,
                 clinicStatus: clinic.status,
+                fromCache: fromCache,
               );
             }).handleError((e) {
               throw ServerException('Failed to combine user profile: $e');

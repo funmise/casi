@@ -57,7 +57,8 @@ class TempDashboard extends StatelessWidget {
         }
 
         // AppUserUnauthenticated
-        return const Center(child: Text('it stays'));
+        //return const Center(child: Text('it stays'));
+        return const SizedBox.shrink();
       },
     );
   }

@@ -19,70 +19,91 @@ class AuthGate extends StatefulWidget {
 }
 
 class _AuthGateState extends State<AuthGate> {
-  final GlobalKey<NavigatorState> _innerNavKey = GlobalKey<NavigatorState>();
+  final _innerNavKey = GlobalKey<NavigatorState>();
   _Phase? _lastPhase;
+  bool _decided = false; // we’ve chosen onboarding/dashboard
 
-  void _resetInnerTo(Widget target, _Phase phase) {
-    if (_lastPhase == phase) {
-      return; // Prevent loops when the state re-emits same phase
-    }
+  void _go(_Phase phase, Widget page) {
+    if (_lastPhase == phase) return;
     _lastPhase = phase;
+    _decided = phase == _Phase.onboarding || phase == _Phase.dashboard;
 
-    final nav = _innerNavKey.currentState!;
-    nav.pushAndRemoveUntil(
+    _innerNavKey.currentState!.pushAndRemoveUntil(
       PageRouteBuilder(
-        pageBuilder: (_, _, _) => target,
+        pageBuilder: (_, __, ___) => page,
         transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
       ),
-      (r) => false, // wipe ONLY the inner navigator
+      (r) => false,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocListener<UserCubit, UserState>(
-      listenWhen: (p, c) {
-        if (p.runtimeType != c.runtimeType) return true;
-        // also fire when enrollmentStatus changes while still UserReady
-        if (p is UserReady && c is UserReady) {
-          return p.user.enrollmentStatus != c.user.enrollmentStatus;
+      listenWhen: (prev, curr) {
+        if (prev.runtimeType != curr.runtimeType) return true;
+
+        if (prev is UserReady && curr is UserReady) {
+          final statusChanged =
+              prev.user.enrollmentStatus != curr.user.enrollmentStatus;
+          final cacheFlipBeforeDecision =
+              !_decided && (prev.fromCache != curr.fromCache);
+          // After we’ve decided, ignore cache flips completely.
+          return statusChanged || cacheFlipBeforeDecision;
         }
         return false;
       },
       listener: (context, state) {
         if (state is UserInitial || state is UserLoading) {
-          _resetInnerTo(const Scaffold(body: Loader()), _Phase.loading);
+          if (!_decided) _go(_Phase.loading, const Scaffold(body: Loader()));
           return;
         }
 
         if (state is UserUnauthenticated) {
-          _resetInnerTo(
+          _decided = false; // reset decision
+          _lastPhase = null;
+          _go(
+            _Phase.unauth,
             BlocProvider(
               create: (_) =>
                   serviceLocator<AuthBloc>()..add(AuthCheckRequested()),
               child: const SignInPage(),
             ),
-            _Phase.unauth,
           );
-        }
-
-        if (state is UserReady &&
-            state.user.enrollmentStatus != EnrollmentStatus.active) {
-          _resetInnerTo(const OnboardingFlow(), _Phase.onboarding);
           return;
         }
 
         if (state is UserReady) {
-          _resetInnerTo(const TempDashboard(), _Phase.dashboard);
+          // While we haven't decided yet, show loader on cached snapshots.
+          if (state.fromCache && !_decided) {
+            _go(_Phase.loading, const Scaffold(body: Loader()));
+            return;
+          }
+
+          final status = state.user.enrollmentStatus;
+          final phase = status == EnrollmentStatus.active
+              ? _Phase.dashboard
+              : _Phase.onboarding;
+
+          // Only navigate on real (non-cached) data.
+          if (!state.fromCache) {
+            _go(
+              phase,
+              phase == _Phase.dashboard
+                  ? const TempDashboard()
+                  : const OnboardingFlow(),
+            );
+          }
         }
       },
-
-      // The outer scaffold hosts an INNER Navigator. Users never see this route.
-      // Initial inner route is just a loader until the first state arrives.
       child: Navigator(
         key: _innerNavKey,
-        onGenerateRoute: (_) =>
-            MaterialPageRoute(builder: (_) => const Scaffold(body: Loader())),
+        onGenerateRoute: (_) => PageRouteBuilder(
+          pageBuilder: (_, __, ___) => const Scaffold(body: Loader()),
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+        ),
       ),
     );
   }

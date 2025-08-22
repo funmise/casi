@@ -11,7 +11,8 @@ class UserCubit extends Cubit<UserState> {
   final WatchUser _watch;
   final IsSignOut _signOut;
 
-  StreamSubscription<Either<Failure, UserProfile?>>? _sub;
+  StreamSubscription<Either<Failure, ({UserProfile? user, bool fromCache})>>?
+  _sub;
 
   UserCubit({required WatchUser watch, required IsSignOut signOut})
     : _watch = watch,
@@ -23,12 +24,15 @@ class UserCubit extends Cubit<UserState> {
     _sub?.cancel();
 
     _sub = _watch(NoParams()).listen(
-      (res) => res.fold(
-        (failure) => emit(UserError(failure.message)),
-        (profile) => profile == null
-            ? emit(UserUnauthenticated())
-            : emit(UserReady(profile)),
-      ),
+      (res) =>
+          res.fold((failure) => emit(UserError(failure.message)), (payload) {
+            final user = payload.user;
+            if (user == null) {
+              emit(UserUnauthenticated());
+            } else {
+              emit(UserReady(user, fromCache: payload.fromCache));
+            }
+          }),
       onError: (e, __) => emit(UserError(e.toString())),
     );
   }
@@ -42,7 +46,7 @@ class UserCubit extends Cubit<UserState> {
     });
   }
 
-  //to restart the stream manually.
+  // to restart the stream manually.
   void resubscribe() => _subscribe();
 
   @override

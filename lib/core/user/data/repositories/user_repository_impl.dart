@@ -12,15 +12,23 @@ class UserRepositoryImpl implements UserRepository {
 
   // One shared stream for the whole app.
   // Both UserCubit and AuthBloc will subscribe to THIS, avoiding double reads.
-  late final Stream<Either<Failure, UserProfile?>> _shared = _buildShared();
+  late final Stream<Either<Failure, ({UserProfile? user, bool fromCache})>>
+  _shared = _buildShared();
 
   UserRepositoryImpl(this._remote);
 
-  Stream<Either<Failure, UserProfile?>> _buildShared() {
+  Stream<Either<Failure, ({UserProfile? user, bool fromCache})>>
+  _buildShared() {
     try {
       return _remote
-          .watch()
-          .map<Either<Failure, UserProfile?>>((p) => Right(p))
+          .watch() // Stream<UserProfileModel?>
+          .map<Either<Failure, ({UserProfile? user, bool fromCache})>>((p) {
+            if (p == null) {
+              return const Right((user: null, fromCache: false));
+            }
+            final model = p;
+            return Right((user: model, fromCache: model.fromCache));
+          })
           // Turn async errors into a value (Left) before completion.
           .onErrorReturnWith((error, stack) {
             if (error is ServerException) {
@@ -39,5 +47,6 @@ class UserRepositoryImpl implements UserRepository {
   }
 
   @override
-  Stream<Either<Failure, UserProfile?>> watch() => _shared;
+  Stream<Either<Failure, ({UserProfile? user, bool fromCache})>> watch() =>
+      _shared;
 }
