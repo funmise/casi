@@ -12,6 +12,8 @@ import 'package:casi/core/widgets/primary_text_field.dart';
 import 'package:casi/core/user/domain/entities/clinic.dart';
 import 'package:casi/features/enrollment/presentation/bloc/enrollment_bloc.dart';
 import 'terms_of_service_page.dart';
+import 'package:country_state_city/country_state_city.dart' as csc;
+import 'package:casi/core/utils/ca_geo.dart';
 
 class VerifyClinicPage extends StatefulWidget {
   const VerifyClinicPage({super.key});
@@ -24,29 +26,145 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
   // form
   final _formKey = GlobalKey<FormState>();
 
-  // visible inputs
-  final _provinceCtrl = TextEditingController();
-  final _cityCtrl = TextEditingController();
+  // visible inputs typeahead refs
+  final _clinicSuggestionsCtrl = SuggestionsController<Clinic>();
+  TextEditingController? _clinicTypeaheadCtrl;
+  FocusNode? _clinicTypeaheadFocus;
+  String get _clinicName => _clinicTypeaheadCtrl?.text.trim() ?? '';
 
-  // typeahead refs
-  final _suggestionsCtrl = SuggestionsController<Clinic>();
-  TextEditingController? _typeaheadCtrl;
-  FocusNode? _typeaheadFocus;
-  String get _clinicName => _typeaheadCtrl?.text.trim() ?? '';
+  final _provinceSuggestionsCtrl = SuggestionsController<String>();
+  TextEditingController? _provinceTypeaheadCtrl;
+  FocusNode? _provinceTypeaheadFocus;
+  String get _provinceName => _provinceTypeaheadCtrl?.text.trim() ?? '';
+
+  final _citySuggestionsCtrl = SuggestionsController<String>();
+  TextEditingController? _cityTypeaheadCtrl;
+  FocusNode? _cityTypeaheadFocus;
+  String get _cityName => _cityTypeaheadCtrl?.text.trim() ?? '';
 
   Clinic? _selectedClinic;
+  String? _selectedProvinceCode;
+  final Map<String, List<String>> _citiesCache = {};
+
+  //  lock fields
+  bool get _isLocked => _selectedClinic != null;
+  Timer? _resolveTimer;
+  bool _wiredClinicListener = false;
+  bool get _hasClinicText =>
+      (_clinicTypeaheadCtrl?.text.trim().isNotEmpty ?? false);
 
   @override
   void dispose() {
-    _provinceCtrl.dispose();
-    _cityCtrl.dispose();
     // Close suggestions popup if open
-    _suggestionsCtrl.close();
+    _clinicSuggestionsCtrl.close();
+    _provinceSuggestionsCtrl.close();
+    _citySuggestionsCtrl.close();
+    _resolveTimer?.cancel();
     super.dispose();
   }
 
-  Future<List<Clinic>> _suggestFromBloc(String pattern) async {
-    final q = pattern.trim();
+  bool get _provinceTextInvalid {
+    if (_isLocked) return false; // locked province can't be invalid
+    final t = (_provinceTypeaheadCtrl?.text.trim() ?? '');
+    return t.isNotEmpty && codeForProvinceName(t) == null;
+  }
+
+  Future<Clinic?> _resolveClinicByExactName(String name) async {
+    final query = name.trim();
+    if (query.isEmpty) return null;
+
+    final bloc = context.read<EnrollmentBloc>();
+    final querylower = query.toLowerCase();
+    bloc.add(SearchClinicsEvent(query));
+
+    try {
+      final state = await bloc.stream
+          .where((s) => s is ClinicSearchSuccess)
+          .cast<ClinicSearchSuccess>()
+          .firstWhere((s) => s.queryLower == querylower)
+          .timeout(const Duration(milliseconds: 900));
+
+      // find exact (case-insensitive) match; return null if none
+      for (final c in state.results) {
+        if (c.name.toLowerCase() == querylower) return c;
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // Schedule a resolve after a brief pause
+  void _scheduleResolveExact(String text) {
+    final query = text.trim();
+
+    // If empty: cancel any pending resolve, unlock, and bail
+    if (query.isEmpty) {
+      _resolveTimer?.cancel();
+      if (_selectedClinic != null) {
+        setState(() => _selectedClinic = null);
+      }
+      _provinceTypeaheadFocus?.canRequestFocus = true;
+      _cityTypeaheadFocus?.canRequestFocus = true;
+      return;
+    }
+
+    // Debounce: cancel any previous timer so only the latest keystroke wins.
+    _resolveTimer?.cancel();
+
+    _resolveTimer = Timer(const Duration(milliseconds: 250), () async {
+      // If already locked to the same name (case-insensitive), do nothing.
+      final queryLower = query.toLowerCase();
+      if (_selectedClinic != null &&
+          _selectedClinic!.name.toLowerCase() == queryLower) {
+        return;
+      }
+
+      final match = await _resolveClinicByExactName(query);
+      if (!mounted) return;
+
+      if (match != null) {
+        _lockToClinic(match); // lock + fill fields
+      } else if (_selectedClinic != null) {
+        setState(() => _selectedClinic = null); // unlock
+        // unlock focus for province/city
+        _provinceTypeaheadFocus?.canRequestFocus = true;
+        _cityTypeaheadFocus?.canRequestFocus = true;
+      }
+    });
+  }
+
+  void _lockToClinic(Clinic c) {
+    setState(() {
+      _selectedClinic = c;
+      _selectedProvinceCode = c.province;
+    });
+
+    _clinicTypeaheadCtrl?.text = c.name;
+    _clinicTypeaheadCtrl?.selection = TextSelection.collapsed(
+      offset: c.name.length,
+    );
+    _provinceTypeaheadCtrl?.text = nameForProvinceCode(c.province);
+    _cityTypeaheadCtrl?.text = (c.city ?? '');
+
+    /// Clear focus & block further requests
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    _provinceTypeaheadFocus
+      ?..unfocus()
+      ..canRequestFocus = false;
+    _cityTypeaheadFocus
+      ?..unfocus()
+      ..canRequestFocus = false;
+
+    // Close any overlays
+    _clinicSuggestionsCtrl.close();
+    _provinceSuggestionsCtrl.close();
+    _citySuggestionsCtrl.close();
+  }
+
+  Future<List<Clinic>> _suggestClinics(String queryText) async {
+    final q = queryText.trim();
     if (q.isEmpty) return const <Clinic>[];
 
     final lower = q.toLowerCase();
@@ -76,37 +194,87 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
     return results;
   }
 
+  Future<List<String>> _suggestProvinces(String queryText) async {
+    final s = queryText.trim().toLowerCase();
+    final all = kProvinceCodeToName.values.toList();
+    if (s.isEmpty) return all;
+    return all.where((n) => n.toLowerCase().startsWith(s)).toList();
+  }
+
+  Future<List<String>> _suggestCities(String queryText) async {
+    final code =
+        _selectedProvinceCode ??
+        codeForProvinceName(_provinceTypeaheadCtrl?.text);
+    if (code == null || code.isEmpty) return const [];
+    final search = queryText.trim().toLowerCase();
+
+    final cached = _citiesCache[code];
+    final List<String> cities;
+    if (cached != null) {
+      cities = cached;
+    } else {
+      final raw = await csc.getStateCities('CA', code);
+      cities = raw.map((c) => c.name).where((n) => n.isNotEmpty).toList()
+        ..sort((a, b) => a.compareTo(b));
+      _citiesCache[code] = cities;
+    }
+    if (search.isEmpty) return cities.toList();
+    return cities.where((n) => n.toLowerCase().startsWith(search)).toList();
+  }
+
   void _onPickClinic(Clinic c) {
     setState(() {
       _selectedClinic = c;
-      _provinceCtrl.text = c.province ?? '';
-      _cityCtrl.text = c.city ?? '';
+      _selectedProvinceCode = c.province;
     });
 
     // reflect chosen text in the internal builder controller as well
-    final ctrl = _typeaheadCtrl;
+    final ctrl = _clinicTypeaheadCtrl;
     if (ctrl != null) {
       ctrl.text = c.name;
+      _provinceTypeaheadCtrl?.text = nameForProvinceCode(c.province);
+      _cityTypeaheadCtrl?.text = (c.city ?? '');
       ctrl.selection = TextSelection.collapsed(offset: c.name.length);
     }
 
-    _suggestionsCtrl.close();
+    _clinicSuggestionsCtrl.close();
   }
 
   void _submit() {
     // Close any open overlays/keyboard
     FocusScope.of(context).unfocus();
-    _suggestionsCtrl.close();
+    _clinicSuggestionsCtrl.close();
+    _provinceSuggestionsCtrl.close();
+    _citySuggestionsCtrl.close();
 
     // Block submit if the clinic name is empty.
     final isValid = _formKey.currentState?.validate() ?? false;
     if (!isValid) {
-      _typeaheadFocus?.requestFocus();
+      // focus the first invalid field
+      if ((_clinicTypeaheadCtrl?.text.trim().isEmpty ?? true)) {
+        _clinicTypeaheadFocus?.requestFocus();
+      } else if (_provinceTextInvalid) {
+        _provinceTypeaheadFocus
+          ?..canRequestFocus = true
+          ..requestFocus();
+      } else {
+        // fallback if something else failed
+        _clinicTypeaheadFocus?.requestFocus();
+      }
       return;
     }
 
     final userState = context.read<UserCubit>().state as UserReady;
     final uid = userState.user.uid;
+
+    // resolve code if user typed province name but didn’t select
+    final provinceCode =
+        _selectedProvinceCode ??
+        codeForProvinceName(_provinceTypeaheadCtrl?.text.trim());
+
+    final city = (_cityTypeaheadCtrl?.text.trim().isEmpty ?? true)
+        ? null
+        : _cityTypeaheadCtrl!.text.trim();
 
     if (_selectedClinic != null) {
       context.read<EnrollmentBloc>().add(
@@ -117,10 +285,8 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
       context.read<EnrollmentBloc>().add(
         CreateClinicEvent(
           name: _clinicName,
-          province: _provinceCtrl.text.trim().isEmpty
-              ? null
-              : _provinceCtrl.text.trim(),
-          city: _cityCtrl.text.trim().isEmpty ? null : _cityCtrl.text.trim(),
+          province: provinceCode,
+          city: city,
         ),
       );
     }
@@ -159,7 +325,7 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
           onTap: () {
             // tap anywhere outside → dismiss keyboard + suggestions
             FocusScope.of(context).unfocus();
-            _suggestionsCtrl.close();
+            _clinicSuggestionsCtrl.close();
           },
           child: SafeArea(
             child: Center(
@@ -200,20 +366,23 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
                           // avoid double debouncing; BLoC already debounces
                           debounceDuration: Duration.zero,
 
-                          suggestionsCallback: _suggestFromBloc,
+                          suggestionsCallback: _suggestClinics,
 
-                          // input builder (reuse PrimaryTextField)
+                          // input builder
                           builder: (context, controller, focusNode) {
-                            _typeaheadCtrl ??= controller;
-                            _typeaheadFocus ??= focusNode;
+                            _clinicTypeaheadCtrl ??= controller;
+                            _clinicTypeaheadFocus ??= focusNode;
 
-                            controller.addListener(() {
-                              // typing invalidates previous selection
-                              if (_selectedClinic != null &&
-                                  _selectedClinic!.name != controller.text) {
-                                setState(() => _selectedClinic = null);
-                              }
-                            });
+                            if (!_wiredClinicListener) {
+                              _wiredClinicListener = true;
+
+                              // One listener to drive both behaviors:
+                              controller.addListener(() {
+                                _scheduleResolveExact(
+                                  controller.text,
+                                ); // live auto-resolve + lock/unlock
+                              });
+                            }
 
                             return PrimaryTextField(
                               controller: controller,
@@ -258,12 +427,12 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
                               style: TextStyle(color: AppPallete.white),
                             ),
                             subtitle: Text(
-                              'Press Submit to create "$_clinicName"',
+                              'You are creating: "$_clinicName"',
                               style: const TextStyle(color: AppPallete.white),
                             ),
                           ),
 
-                          suggestionsController: _suggestionsCtrl,
+                          suggestionsController: _clinicSuggestionsCtrl,
                           decorationBuilder: (context, child) => Material(
                             color: AppPallete.black.withValues(alpha: .9),
                             borderRadius: BorderRadius.circular(12),
@@ -276,19 +445,169 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
                         ),
                         const SizedBox(height: 16),
 
-                        PrimaryTextField(
-                          controller: _provinceCtrl,
-                          hint: 'Province (optional)',
+                        // --- Province (TypeAhead of full names; we keep CODE separately) ---
+                        IgnorePointer(
+                          ignoring: _isLocked,
+                          child: TypeAheadField<String>(
+                            suggestionsCallback: _isLocked
+                                ? (_) async => const []
+                                : _suggestProvinces,
+                            builder: (context, controller, focusNode) {
+                              _provinceTypeaheadCtrl ??= controller;
+                              _provinceTypeaheadFocus ??= focusNode;
+                              return PrimaryTextField(
+                                controller: controller,
+                                focusNode: focusNode,
+                                hint: 'Province (optional)',
+                                textInputAction: TextInputAction.next,
+                                enabled: !_isLocked, // <-- lock visual + input
+                                readOnly: _isLocked,
+                                autovalidateMode:
+                                    AutovalidateMode.onUserInteraction,
+                                validator: (v) {
+                                  if (_isLocked) {
+                                    return null; // locked = always valid
+                                  }
+                                  final t = (v ?? '').trim();
+                                  if (t.isEmpty) return null; // optional
+                                  return codeForProvinceName(t) == null
+                                      ? 'Please choose a valid province/territory'
+                                      : null;
+                                },
+                              );
+                            },
+                            itemBuilder: (context, String name) => ListTile(
+                              title: Text(
+                                name,
+                                style: const TextStyle(color: AppPallete.white),
+                              ),
+                            ),
+                            onSelected: (String name) {
+                              setState(() {
+                                _selectedProvinceCode = codeForProvinceName(
+                                  name,
+                                );
+                              });
+                              // keep text in the field
+                              _provinceTypeaheadCtrl?.text = name;
+                              // clear city when province changes
+                              _cityTypeaheadCtrl?.clear();
+                            },
+
+                            emptyBuilder: (context) => _isLocked
+                                ? const SizedBox.shrink()
+                                : ListTile(
+                                    title: const Text(
+                                      'No matches',
+                                      style: TextStyle(color: AppPallete.white),
+                                    ),
+                                    subtitle: Text(
+                                      'You are creating: "$_provinceName"',
+                                      style: const TextStyle(
+                                        color: AppPallete.white,
+                                      ),
+                                    ),
+                                  ),
+
+                            suggestionsController: _provinceSuggestionsCtrl,
+                            decorationBuilder: (context, child) => Material(
+                              color: AppPallete.black.withValues(alpha: .9),
+                              borderRadius: BorderRadius.circular(12),
+                              child: child,
+                            ),
+                            constraints: const BoxConstraints(
+                              maxHeight: 280,
+                              minWidth: 432,
+                            ),
+                          ),
                         ),
+
                         const SizedBox(height: 12),
 
-                        PrimaryTextField(
-                          controller: _cityCtrl,
-                          hint: 'City (optional)',
-                        ),
-                        const SizedBox(height: 12),
+                        // --- City (TypeAhead backed by package; free text allowed) ---
+                        IgnorePointer(
+                          ignoring: _isLocked,
+                          child: TypeAheadField<String>(
+                            suggestionsCallback: _isLocked
+                                ? (_) async => const []
+                                : _suggestCities,
+                            builder: (context, controller, focusNode) {
+                              _cityTypeaheadCtrl ??= controller;
+                              _cityTypeaheadFocus ??= focusNode;
 
-                        const SizedBox(height: 20),
+                              return PrimaryTextField(
+                                controller: controller,
+                                focusNode: focusNode,
+                                hint: 'City (optional)',
+                                textInputAction: TextInputAction.done,
+                                enabled: !_isLocked, // <-- lock visual + input
+                                readOnly: _isLocked,
+                              );
+                            },
+
+                            itemBuilder: (context, String city) => ListTile(
+                              title: Text(
+                                city,
+                                style: const TextStyle(color: AppPallete.white),
+                              ),
+                            ),
+
+                            onSelected: (String city) {
+                              _cityTypeaheadCtrl?.text =
+                                  city; // free text still allowed
+                            },
+
+                            emptyBuilder: (context) => _isLocked
+                                ? const SizedBox.shrink()
+                                : ListTile(
+                                    title: const Text(
+                                      'No matches',
+                                      style: TextStyle(color: AppPallete.white),
+                                    ),
+                                    subtitle: Text(
+                                      'You are creating: "$_cityName"',
+                                      style: const TextStyle(
+                                        color: AppPallete.white,
+                                      ),
+                                    ),
+                                  ),
+
+                            suggestionsController: _citySuggestionsCtrl,
+                            decorationBuilder: (context, child) => Material(
+                              color: AppPallete.black.withValues(alpha: .9),
+                              borderRadius: BorderRadius.circular(12),
+                              child: child,
+                            ),
+                            constraints: const BoxConstraints(
+                              maxHeight: 280,
+                              minWidth: 0,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 5),
+
+                        if (_hasClinicText && _isLocked)
+                          const Row(
+                            children: [
+                              Icon(
+                                Icons.lock,
+                                size: 16,
+                                color: AppPallete.white,
+                              ),
+                              SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  'Using an existing clinic from database. Province/City are locked. Pick a unique name if those fields require change.',
+                                  style: TextStyle(color: AppPallete.white),
+                                ),
+                              ),
+                            ],
+                          )
+                        else
+                          const SizedBox.shrink(),
+
+                        const SizedBox(height: 50),
 
                         PrimaryButton(label: 'Submit', onPressed: _submit),
                       ],

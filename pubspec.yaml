@@ -46,6 +46,7 @@ dependencies:
   equatable: ^2.0.7
   stream_transform: ^2.1.1
   rxdart: ^0.28.0
+  country_state_city: ^0.1.6
 
 dev_dependencies:
   flutter_test:
