@@ -268,13 +268,12 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
     final uid = userState.user.uid;
 
     // resolve code if user typed province name but didn’t select
-    final provinceCode =
-        _selectedProvinceCode ??
-        codeForProvinceName(_provinceTypeaheadCtrl?.text.trim());
 
-    final city = (_cityTypeaheadCtrl?.text.trim().isEmpty ?? true)
+    final provinceCode = _provinceName.isEmpty
         ? null
-        : _cityTypeaheadCtrl!.text.trim();
+        : codeForProvinceName(_provinceName);
+
+    final city = _cityName.isEmpty ? null : _cityTypeaheadCtrl!.text.trim();
 
     if (_selectedClinic != null) {
       context.read<EnrollmentBloc>().add(
