@@ -14,6 +14,10 @@ class PrimaryTextField extends StatelessWidget {
   final TextInputAction? textInputAction;
   final ValueChanged<String>? onSubmitted;
 
+  // form support
+  final String? Function(String?)? validator;
+  final AutovalidateMode? autovalidateMode;
+
   const PrimaryTextField({
     super.key,
     required this.controller,
@@ -25,18 +29,22 @@ class PrimaryTextField extends StatelessWidget {
     this.focusNode,
     this.textInputAction,
     this.onSubmitted,
+    this.validator,
+    this.autovalidateMode,
   });
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return TextFormField(
       controller: controller,
       focusNode: focusNode,
       readOnly: readOnly,
       onChanged: onChanged,
-      onSubmitted: onSubmitted,
+      onFieldSubmitted: onSubmitted,
       keyboardType: keyboardType,
       textInputAction: textInputAction,
+      validator: validator,
+      autovalidateMode: autovalidateMode,
       style: const TextStyle(color: AppPallete.white),
       decoration: InputDecoration(
         hintText: hint,

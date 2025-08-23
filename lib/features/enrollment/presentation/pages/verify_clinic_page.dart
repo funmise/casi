@@ -21,6 +21,9 @@ class VerifyClinicPage extends StatefulWidget {
 }
 
 class _VerifyClinicPageState extends State<VerifyClinicPage> {
+  // form
+  final _formKey = GlobalKey<FormState>();
+
   // visible inputs
   final _provinceCtrl = TextEditingController();
   final _cityCtrl = TextEditingController();
@@ -95,6 +98,13 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
     FocusScope.of(context).unfocus();
     _suggestionsCtrl.close();
 
+    // Block submit if the clinic name is empty.
+    final isValid = _formKey.currentState?.validate() ?? false;
+    if (!isValid) {
+      _typeaheadFocus?.requestFocus();
+      return;
+    }
+
     final userState = context.read<UserCubit>().state as UserReady;
     final uid = userState.user.uid;
 
@@ -157,117 +167,132 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
                 padding: const EdgeInsets.all(24),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 480),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 12),
-                      const Text(
-                        'Verify Your Clinic',
-                        style: TextStyle(
-                          color: AppPallete.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Verify Your Clinic',
+                          style: TextStyle(
+                            color: AppPallete.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
+                        const SizedBox(height: 24),
 
-                      Image.asset('assets/images/clinic.png', height: 180),
+                        Image.asset('assets/images/clinic.png', height: 180),
 
-                      const SizedBox(height: 24),
-                      const Text(
-                        "Enter your clinic's info below to verify your account",
-                        style: TextStyle(color: AppPallete.white, fontSize: 20),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 24),
+                        const SizedBox(height: 24),
+                        const Text(
+                          "Enter your clinic's info below to verify your account",
+                          style: TextStyle(
+                            color: AppPallete.white,
+                            fontSize: 20,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
 
-                      // ===== TypeAhead (BLoC-powered) =====
-                      TypeAheadField<Clinic>(
-                        // avoid double debouncing; BLoC already debounces
-                        debounceDuration: Duration.zero,
+                        // ===== TypeAhead (BLoC-powered) =====
+                        TypeAheadField<Clinic>(
+                          // avoid double debouncing; BLoC already debounces
+                          debounceDuration: Duration.zero,
 
-                        suggestionsCallback: _suggestFromBloc,
+                          suggestionsCallback: _suggestFromBloc,
 
-                        // input builder (reuse PrimaryTextField)
-                        builder: (context, controller, focusNode) {
-                          _typeaheadCtrl ??= controller;
-                          _typeaheadFocus ??= focusNode;
+                          // input builder (reuse PrimaryTextField)
+                          builder: (context, controller, focusNode) {
+                            _typeaheadCtrl ??= controller;
+                            _typeaheadFocus ??= focusNode;
 
-                          controller.addListener(() {
-                            // typing invalidates previous selection
-                            if (_selectedClinic != null &&
-                                _selectedClinic!.name != controller.text) {
-                              setState(() => _selectedClinic = null);
-                            }
-                          });
+                            controller.addListener(() {
+                              // typing invalidates previous selection
+                              if (_selectedClinic != null &&
+                                  _selectedClinic!.name != controller.text) {
+                                setState(() => _selectedClinic = null);
+                              }
+                            });
 
-                          return PrimaryTextField(
-                            controller: controller,
-                            focusNode: focusNode,
-                            hint: 'Clinic Name',
-                            textInputAction: TextInputAction.search,
-                            suffix: const Icon(
-                              Icons.search,
-                              color: AppPallete.white,
+                            return PrimaryTextField(
+                              controller: controller,
+                              focusNode: focusNode,
+                              hint: 'Clinic Name',
+                              textInputAction: TextInputAction.search,
+                              suffix: const Icon(
+                                Icons.search,
+                                color: AppPallete.white,
+                              ),
+                              autovalidateMode:
+                                  AutovalidateMode.onUserInteraction,
+                              validator: (v) {
+                                final name = (v ?? '').trim();
+                                if (name.isEmpty) {
+                                  return 'Clinic name is required';
+                                }
+                                return null;
+                              },
+                            );
+                          },
+
+                          itemBuilder: (context, Clinic c) => ListTile(
+                            title: Text(
+                              c.name,
+                              style: const TextStyle(color: AppPallete.white),
                             ),
-                          );
-                        },
-
-                        itemBuilder: (context, Clinic c) => ListTile(
-                          title: Text(
-                            c.name,
-                            style: const TextStyle(color: AppPallete.white),
+                            subtitle: Text(
+                              [
+                                c.city,
+                                c.province,
+                              ].where((e) => (e ?? '').isNotEmpty).join(', '),
+                              style: const TextStyle(color: AppPallete.white),
+                            ),
                           ),
-                          subtitle: Text(
-                            [
-                              c.city,
-                              c.province,
-                            ].where((e) => (e ?? '').isNotEmpty).join(', '),
-                            style: const TextStyle(color: AppPallete.white),
+
+                          onSelected: _onPickClinic,
+
+                          emptyBuilder: (context) => ListTile(
+                            title: const Text(
+                              'No matches',
+                              style: TextStyle(color: AppPallete.white),
+                            ),
+                            subtitle: Text(
+                              'Press Submit to create "$_clinicName"',
+                              style: const TextStyle(color: AppPallete.white),
+                            ),
+                          ),
+
+                          suggestionsController: _suggestionsCtrl,
+                          decorationBuilder: (context, child) => Material(
+                            color: AppPallete.black.withValues(alpha: .9),
+                            borderRadius: BorderRadius.circular(12),
+                            child: child,
+                          ),
+                          constraints: const BoxConstraints(
+                            maxHeight: 280,
+                            minWidth: 432,
                           ),
                         ),
+                        const SizedBox(height: 16),
 
-                        onSelected: _onPickClinic,
-
-                        emptyBuilder: (context) => ListTile(
-                          title: const Text(
-                            'No matches',
-                            style: TextStyle(color: AppPallete.white),
-                          ),
-                          subtitle: Text(
-                            'Press Submit to create "$_clinicName"',
-                            style: const TextStyle(color: AppPallete.white),
-                          ),
+                        PrimaryTextField(
+                          controller: _provinceCtrl,
+                          hint: 'Province (optional)',
                         ),
+                        const SizedBox(height: 12),
 
-                        suggestionsController: _suggestionsCtrl,
-                        decorationBuilder: (context, child) => Material(
-                          color: AppPallete.black.withValues(alpha: .9),
-                          borderRadius: BorderRadius.circular(12),
-                          child: child,
+                        PrimaryTextField(
+                          controller: _cityCtrl,
+                          hint: 'City (optional)',
                         ),
-                        constraints: const BoxConstraints(
-                          maxHeight: 280,
-                          minWidth: 432,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
+                        const SizedBox(height: 12),
 
-                      PrimaryTextField(
-                        controller: _provinceCtrl,
-                        hint: 'Province (optional)',
-                      ),
-                      const SizedBox(height: 12),
+                        const SizedBox(height: 20),
 
-                      PrimaryTextField(
-                        controller: _cityCtrl,
-                        hint: 'City (optional)',
-                      ),
-                      const SizedBox(height: 12),
-
-                      const SizedBox(height: 20),
-
-                      PrimaryButton(label: 'Submit', onPressed: _submit),
-                    ],
+                        PrimaryButton(label: 'Submit', onPressed: _submit),
+                      ],
+                    ),
                   ),
                 ),
               ),
