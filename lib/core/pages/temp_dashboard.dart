@@ -25,6 +25,8 @@ class TempDashboard extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(u.email),
+                  const SizedBox(height: 16),
+                  Text(u.clinicName ?? ''),
                   const SizedBox(height: 32),
                   ElevatedButton(
                     onPressed: () => context.read<UserCubit>().signOut(),

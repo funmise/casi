@@ -50,6 +50,7 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
   bool get _isLocked => _selectedClinic != null;
   Timer? _resolveTimer;
   bool _wiredClinicListener = false;
+  bool _wiredProvinceListener = false;
   bool get _hasClinicText =>
       (_clinicTypeaheadCtrl?.text.trim().isNotEmpty ?? false);
 
@@ -454,6 +455,24 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
                             builder: (context, controller, focusNode) {
                               _provinceTypeaheadCtrl ??= controller;
                               _provinceTypeaheadFocus ??= focusNode;
+
+                              if (!_wiredProvinceListener) {
+                                _wiredProvinceListener = true;
+                                controller.addListener(() {
+                                  if (_isLocked) return;
+                                  final code = codeForProvinceName(
+                                    controller.text.trim(),
+                                  );
+                                  if (code != _selectedProvinceCode) {
+                                    setState(
+                                      () => _selectedProvinceCode = code,
+                                    );
+                                    _cityTypeaheadCtrl?.clear();
+                                    _citySuggestionsCtrl.close();
+                                    _citySuggestionsCtrl.refresh();
+                                  }
+                                });
+                              }
                               return PrimaryTextField(
                                 controller: controller,
                                 focusNode: focusNode,
@@ -491,6 +510,8 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
                               _provinceTypeaheadCtrl?.text = name;
                               // clear city when province changes
                               _cityTypeaheadCtrl?.clear();
+                              _citySuggestionsCtrl.close();
+                              _citySuggestionsCtrl.refresh();
                             },
 
                             emptyBuilder: (context) => _isLocked
