@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:casi/core/user/cubit/user_cubit.dart';
 import 'package:casi/core/user/cubit/user_state.dart';
 import 'package:flutter/material.dart';
@@ -16,36 +17,72 @@ class TermsOfServicePage extends StatefulWidget {
 }
 
 class _TermsOfServicePageState extends State<TermsOfServicePage> {
-  final _scroll = ScrollController();
-  bool _atBottom = false;
+  final ScrollController _strollControl = ScrollController();
+
+  // px from the end counts as bottom
+  static const double _nearBottomTolerance = 48.0;
+  static const Duration _debounceDur = Duration(milliseconds: 80);
+  bool _isNearBottom = false;
+  Timer? _debounceTimer;
 
   @override
   void initState() {
     super.initState();
     context.read<EnrollmentBloc>().add(const LoadEthicsEvent());
-
-    // Update when the user actually scrolls.
-    _scroll.addListener(_updateAtBottom);
+    _strollControl.addListener(_onScroll);
   }
 
   @override
   void dispose() {
-    _scroll.removeListener(_updateAtBottom);
-    _scroll.dispose();
+    _debounceTimer?.cancel();
+    _strollControl.removeListener(_onScroll);
+    _strollControl.dispose();
     super.dispose();
   }
 
-  void _updateAtBottom() {
-    if (!_scroll.hasClients) return;
-    final m = _scroll.position;
+  // Robust near-bottom detector with clamping + debounce
+  void _onScroll() {
+    if (!_strollControl.hasClients) return;
 
-    // If there's nothing to scroll (maxScrollExtent <= 0), treat as "at bottom".
-    final atBottom =
-        m.maxScrollExtent <= 0 || m.pixels >= (m.maxScrollExtent - 8.0);
+    final pos = _strollControl.position;
+    final double max = pos.maxScrollExtent;
+    // Clamp to ignore iOS elastic overscroll
+    final double px = pos.pixels.clamp(0.0, max);
 
-    if (_atBottom != atBottom) {
-      setState(() => _atBottom = atBottom);
+    // If there's nothing to scroll, treat as “at bottom”
+    final bool nearBottom = max <= 0 || px >= (max - _nearBottomTolerance);
+
+    if (nearBottom != _isNearBottom) {
+      _debounceTimer?.cancel();
+      _debounceTimer = Timer(_debounceDur, () {
+        if (!mounted || !_strollControl.hasClients) return;
+        final double max2 = _strollControl.position.maxScrollExtent;
+        final double px2 = _strollControl.position.pixels.clamp(0.0, max2);
+        final bool nearBottom2 =
+            max2 <= 0 || px2 >= (max2 - _nearBottomTolerance);
+        if (nearBottom2 != _isNearBottom) {
+          setState(() => _isNearBottom = nearBottom2);
+        }
+      });
     }
+  }
+
+  Future<void> _scrollToBottom() async {
+    if (!_strollControl.hasClients) return;
+    await _strollControl.animateTo(
+      _strollControl.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  Future<void> _scrollToTop() async {
+    if (!_strollControl.hasClients) return;
+    await _strollControl.animateTo(
+      0,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   void _accept() {
@@ -62,7 +99,11 @@ class _TermsOfServicePageState extends State<TermsOfServicePage> {
 
   @override
   Widget build(BuildContext context) {
+    const physics = ClampingScrollPhysics(); // reduce iOS bounce
+
     return Scaffold(
+      appBar: AppBar(title: const Text('AGREEMENT')),
+
       body: BlocConsumer<EnrollmentBloc, EnrollmentState>(
         listener: (context, state) {
           if (state is EnrollmentError) {
@@ -70,14 +111,6 @@ class _TermsOfServicePageState extends State<TermsOfServicePage> {
               ..hideCurrentSnackBar()
               ..showSnackBar(SnackBar(content: Text(state.message)));
           }
-          // if (state is EthicsAccepted) {
-          //   ////context.read<UserCubit>().resubscribe();
-
-          //   // Navigator.of(context).pushAndRemoveUntil(
-          //   //   MaterialPageRoute(builder: (_) => const TempDashboard()),
-          //   //   (route) => false,
-          //   // );
-          // }
         },
         builder: (context, state) {
           if (state is EnrollmentLoading || state is EnrollmentInitial) {
@@ -87,13 +120,12 @@ class _TermsOfServicePageState extends State<TermsOfServicePage> {
             return const SizedBox.shrink();
           }
 
-          final e = state.ethics;
+          final ethics = state.ethics;
 
-          // IMPORTANT: once EthicsLoaded is on screen, do a post-frame check.
-          // This catches the "no scroll" case and flips the UI to show Submit.
+          // If content is short, mark as near-bottom right away.
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
-            _updateAtBottom();
+            _onScroll();
           });
 
           return SafeArea(
@@ -104,25 +136,7 @@ class _TermsOfServicePageState extends State<TermsOfServicePage> {
                   constraints: const BoxConstraints(maxWidth: 560),
                   child: Column(
                     children: [
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.arrow_back,
-                              color: AppPallete.white,
-                            ),
-                            onPressed: () => Navigator.of(context).maybePop(),
-                          ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'AGREEMENT',
-                            style: TextStyle(color: AppPallete.white),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-
-                      // Bounded card
+                      // ---- Card with title/updatedAt and scrollable body ----
                       Expanded(
                         child: Container(
                           decoration: BoxDecoration(
@@ -130,7 +144,9 @@ class _TermsOfServicePageState extends State<TermsOfServicePage> {
                             borderRadius: BorderRadius.circular(18),
                           ),
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
+                              // Title + updatedAt
                               Padding(
                                 padding: const EdgeInsets.fromLTRB(
                                   16,
@@ -142,7 +158,7 @@ class _TermsOfServicePageState extends State<TermsOfServicePage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      e.title,
+                                      ethics.title,
                                       style: const TextStyle(
                                         color: AppPallete.white,
                                         fontSize: 22,
@@ -151,7 +167,7 @@ class _TermsOfServicePageState extends State<TermsOfServicePage> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      'Last updated on ${e.updatedAt.month}/${e.updatedAt.day}/${e.updatedAt.year}',
+                                      'Last updated on ${ethics.updatedAt.month}/${ethics.updatedAt.day}/${ethics.updatedAt.year}',
                                       style: const TextStyle(
                                         color: AppPallete.white,
                                       ),
@@ -161,68 +177,36 @@ class _TermsOfServicePageState extends State<TermsOfServicePage> {
                               ),
                               const Divider(height: 1, color: Colors.white24),
 
-                              // Scrollable body
+                              // Scrollable Ethics body
                               Expanded(
                                 child: Padding(
                                   padding: const EdgeInsets.all(16.0),
                                   child: Scrollbar(
-                                    controller: _scroll,
-                                    child: SingleChildScrollView(
-                                      controller: _scroll,
-                                      child: Text(
-                                        e.body,
-                                        style: const TextStyle(
-                                          color: AppPallete.white,
-                                          height: 1.35,
-                                        ),
+                                    controller: _strollControl,
+                                    child: ListView(
+                                      controller: _strollControl,
+                                      physics: physics,
+                                      padding: const EdgeInsets.only(
+                                        bottom: 120,
                                       ),
+                                      children: [
+                                        Text(
+                                          ethics.body,
+                                          style: const TextStyle(
+                                            color: AppPallete.white,
+                                            height: 1.35,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 8),
                             ],
                           ),
                         ),
                       ),
-
-                      const SizedBox(height: 16),
-
-                      if (!_atBottom)
-                        PrimaryButton(
-                          label: 'Scroll to Bottom',
-                          onPressed: () async {
-                            if (_scroll.hasClients) {
-                              await _scroll.animateTo(
-                                _scroll.position.maxScrollExtent,
-                                duration: const Duration(milliseconds: 400),
-                                curve: Curves.easeOut,
-                              );
-                            }
-                            // Force a re-check even if there was nothing to scroll.
-                            _updateAtBottom();
-                          },
-                        )
-                      else ...[
-                        PrimaryButton(
-                          label: 'Accept & Continue',
-                          onPressed: _accept,
-                        ),
-                        const SizedBox(height: 8),
-                        PrimaryButton(
-                          label: 'Scroll to Top',
-                          onPressed: () async {
-                            if (_scroll.hasClients) {
-                              await _scroll.animateTo(
-                                0,
-                                duration: const Duration(milliseconds: 350),
-                                curve: Curves.easeOut,
-                              );
-                            }
-                            _updateAtBottom();
-                          },
-                        ),
-                      ],
                     ],
                   ),
                 ),
@@ -230,6 +214,34 @@ class _TermsOfServicePageState extends State<TermsOfServicePage> {
             ),
           );
         },
+      ),
+
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            PrimaryButton(
+              label: _isNearBottom ? 'Scroll to Top' : 'Scroll to Bottom',
+              onPressed: _isNearBottom ? _scrollToTop : _scrollToBottom,
+            ),
+            const SizedBox(height: 8),
+
+            Visibility(
+              visible: _isNearBottom,
+              maintainState: true,
+              maintainAnimation: true,
+              maintainSize:
+                  true, // <- keeps exact height to prevent layout shift i.e flapping
+              child: PrimaryButton(
+                label: 'Accept & Continue',
+                onPressed: _accept,
+                backgroundColor: const Color.fromARGB(225, 22, 143, 255),
+                textColor: AppPallete.white,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

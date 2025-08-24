@@ -6,6 +6,8 @@ class PrimaryButton extends StatelessWidget {
   final String label;
   final Widget? leading;
   final bool expanded;
+  final Color? backgroundColor;
+  final Color? textColor;
 
   const PrimaryButton({
     super.key,
@@ -13,6 +15,8 @@ class PrimaryButton extends StatelessWidget {
     this.onPressed,
     this.leading,
     this.expanded = true,
+    this.backgroundColor,
+    this.textColor,
   });
 
   @override
@@ -20,8 +24,8 @@ class PrimaryButton extends StatelessWidget {
     final btn = ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppPallete.white,
-        foregroundColor: AppPallete.black,
+        backgroundColor: backgroundColor ?? AppPallete.white,
+        foregroundColor: textColor ?? AppPallete.black,
         textStyle: const TextStyle(fontSize: 18),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),

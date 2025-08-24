@@ -7,6 +7,10 @@ class AppTheme {
     appBarTheme: const AppBarTheme(
       backgroundColor: AppPallete.background,
       elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
+      foregroundColor: Colors.white,
+      centerTitle: true,
     ),
     textTheme: const TextTheme(
       headlineMedium: TextStyle(
