@@ -76,8 +76,6 @@ type PageDoc = {
 
 // ---------------------------------------------
 // Page definitions (v1)
-// Only the first one is fully expanded as an example;
-// the rest keep the same structure with appropriate labels.
 // ---------------------------------------------
 const pathogen = (pathogen: string): PageDoc => ({
     kind: "pathogen",
@@ -238,7 +236,7 @@ async function seedTemplate(versionId: string) {
     await rootRef.set(
         {
             title: "Quarterly Survey",
-            subtitle: "Report for the previous 3 months",
+            subtitle: "Report for the previous reporting quarter",
             order: TEMPLATE_ORDER,
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         },
@@ -266,12 +264,18 @@ async function seedInstance(
     closesAtISO: string,
     templateVersion: string
 ) {
+    const opens = new Date(opensAtISO);
+    const closes = new Date(closesAtISO);
+    if (isNaN(opens.getTime()) || isNaN(closes.getTime())) {
+        throw new Error("opensAtISO/closesAtISO must be valid ISO-8601 strings");
+    }
+
     const ref = db.collection("survey_instances").doc(quarterId);
     await ref.set(
         {
             quarter: quarterId,
-            opensAt: opensAtISO,
-            closesAt: closesAtISO,
+            opensAt: opens,
+            closesAt: closes,
             templateVersion,
             isActive: true,
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
