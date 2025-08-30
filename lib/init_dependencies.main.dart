@@ -87,4 +87,31 @@ Future<void> initDependencies() async {
         acceptEthics: serviceLocator(),
       ),
     );
+
+  // ---- Survey ----
+  // data sources
+  serviceLocator.registerLazySingleton<SurveyRemoteDataSource>(
+    () => SurveyRemoteDataSourceImpl(serviceLocator()),
+  );
+
+  // repository
+  serviceLocator.registerLazySingleton<SurveyRepository>(
+    () => SurveyRepositoryImpl(serviceLocator()),
+  );
+
+  // use cases
+  serviceLocator.registerFactory(() => GetActiveSurvey(serviceLocator()));
+  serviceLocator.registerFactory(() => GetUserSubmission(serviceLocator()));
+  serviceLocator.registerFactory(() => SaveSurveyDraft(serviceLocator()));
+  serviceLocator.registerFactory(() => SubmitSurvey(serviceLocator()));
+
+  // bloc
+  serviceLocator.registerFactory(
+    () => SurveyBloc(
+      getActive: serviceLocator(),
+      getUserSubmission: serviceLocator(),
+      saveDraft: serviceLocator(),
+      submitSurvey: serviceLocator(),
+    ),
+  );
 }

@@ -1,0 +1,1 @@
+const kTemplateVersion = 'v1';

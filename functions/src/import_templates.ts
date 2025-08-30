@@ -31,11 +31,11 @@ export const TEMPLATE_ORDER = [
     "distemper",
     "influenza",
     "parvovirus",
+    "notes_pathogens",
     "vector_snap",     // diagnostics
     "fecal_float",  // diagnostics
     "parvovirus_snap",   // diagnostics
     "notes_tests",
-    "notes_pathogens",
     "notes_final",
 ] as const;
 
@@ -91,6 +91,7 @@ const pathogen = (pathogen: string): PageDoc => ({
             type: "int",
             label: "Number of confirmed cases (lab-based)",
             min: 0,
+            max: 500,
             lockIf: { diagnosed: false },
         },
         {
@@ -98,6 +99,7 @@ const pathogen = (pathogen: string): PageDoc => ({
             type: "int",
             label: "Number of suspected cases (clinical suspicion)",
             min: 0,
+            max: 500,
             lockIf: { diagnosed: false },
         },
         {
@@ -105,7 +107,6 @@ const pathogen = (pathogen: string): PageDoc => ({
             type: "enum",
             label: "Relative frequency compared to same quarter last year?",
             options: ["increasing", "same", "decreasing"],
-            lockIf: { diagnosed: false },
         },
     ],
 });
@@ -125,6 +126,7 @@ const diagnostic = (
             type: "int",
             label: "Number of tests this quarter",
             min: 0,
+            max: 500,
             lockIf: { performed: false },
         },
         {
@@ -132,7 +134,6 @@ const diagnostic = (
             type: "enum",
             label: "Relative use compared to same quarter last year",
             options: ["increasing", "same", "decreasing"],
-            lockIf: { performed: false },
         },
     ],
 });
@@ -148,6 +149,7 @@ const PAGES_V1: Record<PageId, PageDoc> = {
                 type: "int",
                 label: "On average, how many dogs did you see at your clinic every week in this reporting quarter?",
                 min: 0,
+                max: 500
             },
 
             {

@@ -1,4 +1,5 @@
 import 'package:casi/core/pages/next.dart';
+import 'package:casi/features/survey/presentation/pages/survey_flow.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:casi/core/user/cubit/user_cubit.dart';
@@ -40,6 +41,15 @@ class TempDashboard extends StatelessWidget {
                       );
                     },
                     child: const Text("Go to next"),
+                  ),
+
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const SurveyFlow()),
+                      );
+                    },
+                    child: const Text("Take Survey"),
                   ),
                 ],
               ),
