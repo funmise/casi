@@ -3,9 +3,7 @@ import 'package:casi/core/theme/app_pallete.dart';
 import 'package:casi/core/widgets/primary_button.dart';
 
 class SurveyThankYouPage extends StatelessWidget {
-  final VoidCallback exitFlow;
-
-  const SurveyThankYouPage({super.key, required this.exitFlow});
+  const SurveyThankYouPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +86,12 @@ class SurveyThankYouPage extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
                     const Spacer(),
-                    PrimaryButton(label: 'Continue', onPressed: exitFlow),
+                    PrimaryButton(
+                      label: 'Continue',
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
                     const SizedBox(height: 24),
                   ],
                 ),

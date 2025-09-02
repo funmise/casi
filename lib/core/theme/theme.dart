@@ -18,6 +18,13 @@ class AppTheme {
         fontWeight: FontWeight.w700,
       ),
       bodyMedium: TextStyle(color: AppPallete.white),
+      titleLarge: TextStyle(color: AppPallete.white),
+      bodyLarge: TextStyle(color: AppPallete.white),
+    ),
+    listTileTheme: const ListTileThemeData(
+      textColor: Colors.white,
+      iconColor: Colors.white,
+      selectedColor: Colors.white,
     ),
   );
 }

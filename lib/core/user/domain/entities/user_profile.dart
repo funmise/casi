@@ -16,6 +16,9 @@ class UserProfile {
   final String? clinicCity;
   final ClinicStatus? clinicStatus;
 
+  final String? activeSurveyQuarter;
+  final String? activeSurveyStatus;
+
   const UserProfile({
     required this.uid,
     required this.email,
@@ -29,5 +32,7 @@ class UserProfile {
     this.clinicProvince,
     this.clinicCity,
     this.clinicStatus,
+    this.activeSurveyQuarter,
+    this.activeSurveyStatus,
   });
 }

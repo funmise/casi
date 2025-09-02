@@ -11,12 +11,14 @@ class SegmentedToggle<T> extends StatelessWidget {
   final T? value;
   final List<SegmentedOption<T>> options;
   final ValueChanged<T?>? onChanged;
+  final String? errorText;
 
   const SegmentedToggle({
     super.key,
     required this.value,
     required this.options,
     required this.onChanged,
+    this.errorText,
   });
 
   @override
@@ -25,14 +27,31 @@ class SegmentedToggle<T> extends StatelessWidget {
 
     return Opacity(
       opacity: disabled ? 0.5 : 1,
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (int i = 0; i < options.length; i++) ...[
-            Expanded(
-              child: _pill(options[i], value, disabled ? null : onChanged!),
+          Row(
+            children: [
+              for (int i = 0; i < options.length; i++) ...[
+                Expanded(
+                  child: _pill(options[i], value, disabled ? null : onChanged!),
+                ),
+                if (i < options.length - 1) const SizedBox(width: 12),
+              ],
+            ],
+          ),
+          if (errorText != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                errorText!,
+                style: const TextStyle(
+                  color: AppPallete.red,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
-            if (i < options.length - 1) const SizedBox(width: 12),
-          ],
         ],
       ),
     );

@@ -53,6 +53,7 @@ class SurveyRepositoryImpl implements SurveyRepository {
     required String quarterId,
     required String templateVersion,
     required Map<String, dynamic> answers,
+    required int currentIndex,
   }) async {
     try {
       await remote.saveDraft(
@@ -60,6 +61,7 @@ class SurveyRepositoryImpl implements SurveyRepository {
         quarterId: quarterId,
         templateVersion: templateVersion,
         answers: answers,
+        currentIndex: currentIndex,
       );
       return right(null);
     } on ServerException catch (e) {

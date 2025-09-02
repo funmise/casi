@@ -18,6 +18,7 @@ abstract interface class SurveyRemoteDataSource {
     required String quarterId,
     required String templateVersion,
     required Map<String, dynamic> answers,
+    required int currentIndex,
   });
 
   Future<void> submit({
@@ -139,6 +140,7 @@ class SurveyRemoteDataSourceImpl implements SurveyRemoteDataSource {
     required String quarterId,
     required String templateVersion,
     required Map<String, dynamic> answers,
+    required int currentIndex,
   }) async {
     try {
       final ref = _db
@@ -151,6 +153,7 @@ class SurveyRemoteDataSourceImpl implements SurveyRemoteDataSource {
         'templateVersion': templateVersion,
         'status': 'draft',
         'answers': answers,
+        'currentIndex': currentIndex,
         'savedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } on FirebaseException catch (e) {

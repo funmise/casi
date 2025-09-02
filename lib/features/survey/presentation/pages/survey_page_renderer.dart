@@ -1,5 +1,4 @@
 import 'package:casi/features/survey/presentation/pages/survey_instructions_page.dart';
-import 'package:casi/features/survey/presentation/pages/survey_thank_you_page.dart';
 import 'package:casi/features/survey/presentation/widgets/numeric_stepper_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,22 +29,7 @@ class _SurveyPageRendererState extends State<SurveyPageRenderer> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<SurveyBloc, SurveyState>(
-      listenWhen: (prev, curr) => prev.runtimeType != curr.runtimeType,
-      listener: (context, state) {
-        if (state is SurveySubmitted) {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => SurveyThankYouPage(exitFlow: widget.exitFlow),
-            ),
-          );
-        }
-        if (state is SurveyError) {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(SnackBar(content: Text(state.message)));
-        }
-      },
+    return BlocBuilder<SurveyBloc, SurveyState>(
       builder: (context, state) {
         if (state is! SurveyLoaded) {
           return const Scaffold(body: SizedBox.shrink());
@@ -76,9 +60,12 @@ class _SurveyPageRendererState extends State<SurveyPageRenderer> {
                 onPressed: () {
                   if (index > 0) {
                     context.read<SurveyBloc>().add(GoToPageEvent(index - 1));
-                  } else {
-                    Navigator.of(context).pop();
+                    return;
                   }
+
+                  final canPop = Navigator.of(context).canPop();
+                  // pops to instructions if it exists
+                  !canPop ? widget.exitFlow() : Navigator.of(context).pop();
                 },
                 icon: const Icon(Icons.arrow_back_ios_new_rounded),
               ),
@@ -175,12 +162,16 @@ class _PageBodyState extends State<_PageBody> {
   // for slider, local int cache
   final Map<String, int> _liveInts = {};
 
+  final Map<String, GlobalKey> _itemKeys = {};
+  GlobalKey _keyFor(String id) => _itemKeys.putIfAbsent(id, () => GlobalKey());
+
   @override
   void didUpdateWidget(covariant _PageBody oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.page.id != widget.page.id) {
       _errors.clear(); // keep error UX clean between pages
       _liveInts.clear(); // drop any live slider cache
+      _itemKeys.clear();
     }
   }
 
@@ -296,8 +287,55 @@ class _PageBodyState extends State<_PageBody> {
       }
     }
 
+    // -- Segmented toggle (always required if present) ------------------------------
+    final segmentedToggleCandidates = inputs
+        .where((question) => question.type == 'enum')
+        .toList();
+
+    final hasSegmentedToggle = segmentedToggleCandidates.isNotEmpty;
+    final segmentedToggle = hasSegmentedToggle
+        ? segmentedToggleCandidates.first
+        : null;
+    final String? segmentedToggleVal = hasSegmentedToggle
+        ? answers[segmentedToggle!.id] as String?
+        : null;
+
+    if (hasSegmentedToggle && segmentedToggleVal == null) {
+      _errors[segmentedToggle!.id] = 'Please choose a frequency.';
+    }
+
     setState(() {}); // refresh error rendering
+
+    if (_errors.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _scrollToFirstError(),
+      );
+    }
+
     return _errors.isEmpty;
+  }
+
+  void _scrollToFirstError() {
+    // preserve page order
+    String? firstId;
+    for (final q in widget.page.inputs) {
+      if (_errors.containsKey(q.id)) {
+        firstId = q.id;
+        break;
+      }
+    }
+    if (firstId == null) return;
+
+    final key = _itemKeys[firstId]!;
+    final ctx = key.currentContext;
+    if (ctx == null) return;
+
+    Scrollable.ensureVisible(
+      ctx,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutCubic,
+      alignment: 0.12, // keeps the field a bit below the top
+    );
   }
 
   @override
@@ -368,9 +406,14 @@ class _PageBodyState extends State<_PageBody> {
                 .toList(),
             onChanged: locked
                 ? null
-                : (String? v) => bloc.add(
-                    UpdateAnswerEvent(widget.page.id, question.id, v),
-                  ),
+                : (String? v) {
+                    bloc.add(UpdateAnswerEvent(widget.page.id, question.id, v));
+                    // Clear errors
+                    if (v != null) {
+                      _clearError(question.id);
+                    }
+                  },
+            errorText: _errors[question.id],
           );
           break;
 
@@ -427,6 +470,7 @@ class _PageBodyState extends State<_PageBody> {
 
       questionBlocks.add(
         _QuestionBlock(
+          key: _keyFor(question.id),
           label: question.label,
           labelToControlGap: _PageBody.kLabelToControl,
           child: control,
@@ -501,6 +545,7 @@ class _QuestionBlock extends StatelessWidget {
   final double labelToControlGap;
 
   const _QuestionBlock({
+    super.key,
     required this.label,
     required this.child,
     this.labelToControlGap = 10,

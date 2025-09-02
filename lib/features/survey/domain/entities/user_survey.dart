@@ -3,6 +3,7 @@ class UserSurvey {
   final String templateVersion;
   final String status; // "draft"|"submitted"
   final Map<String, dynamic> answers;
+  final int? currentIndex;
   final DateTime? savedAt;
   final DateTime? submittedAt;
 
@@ -11,6 +12,7 @@ class UserSurvey {
     required this.templateVersion,
     required this.status,
     required this.answers,
+    this.currentIndex,
     this.savedAt,
     this.submittedAt,
   });

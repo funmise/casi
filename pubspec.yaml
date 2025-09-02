@@ -47,6 +47,7 @@ dependencies:
   stream_transform: ^2.1.1
   rxdart: ^0.28.0
   country_state_city: ^0.1.6
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:

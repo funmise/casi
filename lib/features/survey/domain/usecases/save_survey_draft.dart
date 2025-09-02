@@ -14,6 +14,7 @@ class SaveSurveyDraft implements UseCase<void, ParamsSaveSurvey> {
       quarterId: p.quarterId,
       templateVersion: p.templateVersion,
       answers: p.answers,
+      currentIndex: p.currentIndex,
     );
   }
 }
@@ -23,10 +24,12 @@ class ParamsSaveSurvey {
   final String quarterId;
   final String templateVersion;
   final Map<String, dynamic> answers;
+  int currentIndex;
   ParamsSaveSurvey({
     required this.uid,
     required this.quarterId,
     required this.templateVersion,
     required this.answers,
+    required this.currentIndex,
   });
 }

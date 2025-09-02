@@ -149,7 +149,7 @@ const PAGES_V1: Record<PageId, PageDoc> = {
                 type: "int",
                 label: "On average, how many dogs did you see at your clinic every week in this reporting quarter?",
                 min: 0,
-                max: 500
+                max: 100
             },
 
             {

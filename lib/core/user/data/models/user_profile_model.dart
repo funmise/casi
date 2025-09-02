@@ -16,6 +16,8 @@ class UserProfileModel extends UserProfile {
     super.clinicProvince,
     super.clinicCity,
     super.clinicStatus,
+    super.activeSurveyQuarter,
+    super.activeSurveyStatus,
     required this.fromCache,
   });
 }

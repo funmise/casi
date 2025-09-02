@@ -26,6 +26,9 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
   CollectionReference<Map<String, dynamic>> _userEnrollments(String uid) =>
       _db.collection('users').doc(uid).collection('enrollments');
 
+  CollectionReference<Map<String, dynamic>> _userSurveys(String uid) =>
+      _db.collection('users').doc(uid).collection('surveys');
+
   // ---------------- API ----------------
   @override
   Stream<UserProfileModel?> watch() {
@@ -83,11 +86,60 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
                   });
             });
 
-            // --- Combine both and compute a single fromCache flag
-            return Rx.combineLatest2(enrollment$, clinic$, (enr, cl) {
+            // --- Survey Stream (just active and submission status)
+            final activeSurvey$ = _db
+                .collection('survey_instances')
+                .where('isActive', isEqualTo: true)
+                .limit(1)
+                .snapshots(includeMetadataChanges: true)
+                .map<({String? quarterId, bool fromCache})>((qs) {
+                  final fromCache = qs.metadata.isFromCache;
+                  if (qs.docs.isEmpty) {
+                    return (quarterId: null, fromCache: fromCache);
+                  }
+                  final doc = qs.docs.first;
+                  final data = doc.data();
+                  final qid = (data['quarter'] as String?) ?? doc.id;
+                  return (quarterId: qid, fromCache: fromCache);
+                });
+
+            final userSurveyStatus$ = activeSurvey$
+                .switchMap<
+                  ({String? quarterId, String? status, bool fromCache})
+                >((act) {
+                  final qid = act.quarterId;
+                  if (qid == null) {
+                    return Stream.value((
+                      quarterId: null,
+                      status: null,
+                      fromCache: act.fromCache,
+                    ));
+                  }
+                  return _userSurveys(user.uid)
+                      .doc(qid)
+                      .snapshots(includeMetadataChanges: true)
+                      .map((snap) {
+                        final status = (snap.data()?['status'] as String?)
+                            ?.toLowerCase();
+                        final fromCache =
+                            snap.metadata.isFromCache || act.fromCache;
+                        return (
+                          quarterId: qid,
+                          status: status,
+                          fromCache: fromCache,
+                        );
+                      });
+                });
+
+            // --- Combine all three streams
+            return Rx.combineLatest3(enrollment$, clinic$, userSurveyStatus$, (
+              enr,
+              cl,
+              us,
+            ) {
               final enrollment = enr.model;
               final clinic = cl.model;
-              final fromCache = enr.fromCache || cl.fromCache;
+              final fromCache = enr.fromCache || cl.fromCache || us.fromCache;
 
               return UserProfileModel(
                 uid: base.id,
@@ -104,6 +156,9 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
                 clinicProvince: clinic.province,
                 clinicCity: clinic.city,
                 clinicStatus: clinic.status,
+                activeSurveyQuarter: us.quarterId,
+                activeSurveyStatus: us.status,
+
                 fromCache: fromCache,
               );
             }).handleError((e) {

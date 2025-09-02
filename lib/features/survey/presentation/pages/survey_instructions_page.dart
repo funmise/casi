@@ -407,30 +407,38 @@ class _SurveyInstructionsPageState extends State<SurveyInstructionsPage> {
           );
         },
       ),
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            PrimaryButton(
-              label: _isNearBottom ? 'Scroll to Top' : 'Scroll to Bottom',
-              onPressed: _isNearBottom ? _scrollToTop : _scrollToBottom,
+      bottomNavigationBar: BlocBuilder<SurveyBloc, SurveyState>(
+        builder: (context, state) {
+          if (state is SurveyLoading || state is SurveyInitial) {
+            return const SizedBox.shrink();
+          }
+
+          return SafeArea(
+            minimum: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                PrimaryButton(
+                  label: _isNearBottom ? 'Scroll to Top' : 'Scroll to Bottom',
+                  onPressed: _isNearBottom ? _scrollToTop : _scrollToBottom,
+                ),
+                const SizedBox(height: 8),
+                Visibility(
+                  visible: _isNearBottom,
+                  maintainSize: true,
+                  maintainState: true,
+                  maintainAnimation: true,
+                  child: PrimaryButton(
+                    label: 'Continue',
+                    onPressed: _continue,
+                    backgroundColor: const Color.fromARGB(225, 22, 143, 255),
+                    textColor: AppPallete.white,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            Visibility(
-              visible: _isNearBottom,
-              maintainSize: true,
-              maintainState: true,
-              maintainAnimation: true,
-              child: PrimaryButton(
-                label: 'Continue',
-                onPressed: _continue,
-                backgroundColor: const Color.fromARGB(225, 22, 143, 255),
-                textColor: AppPallete.white,
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

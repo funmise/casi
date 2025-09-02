@@ -8,6 +8,7 @@ class UserSurveyModel extends UserSurvey {
     required super.templateVersion,
     required super.status,
     required super.answers,
+    super.currentIndex,
     super.savedAt,
     super.submittedAt,
   });
@@ -23,6 +24,9 @@ class UserSurveyModel extends UserSurvey {
       answers:
           (data['answers'] as Map?)?.map((k, v) => MapEntry(k.toString(), v)) ??
           <String, dynamic>{},
+      currentIndex: (data['currentIndex'] is num)
+          ? (data['currentIndex'] as num).toInt()
+          : null,
       savedAt: dateTime(data['savedAt']),
       submittedAt: dateTime(data['submittedAt']),
     );

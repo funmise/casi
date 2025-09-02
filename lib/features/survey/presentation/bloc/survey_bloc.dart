@@ -57,7 +57,7 @@ class SurveyBloc extends Bloc<SurveyEvent, SurveyState> {
             instance: inst,
             template: tmpl,
             answers: (u?.answers ?? {}),
-            currentIndex: 0,
+            currentIndex: u?.currentIndex ?? 0,
             status: u?.status ?? 'draft',
           ),
         ),
@@ -84,6 +84,7 @@ class SurveyBloc extends Bloc<SurveyEvent, SurveyState> {
         quarterId: st.instance.quarterId,
         templateVersion: st.instance.templateVersion,
         answers: st.answers,
+        currentIndex: st.currentIndex,
       ),
     );
     res.fold((l) => emit(SurveyError(l.message)), (_) {

@@ -17,6 +17,7 @@ abstract interface class SurveyRepository {
     required String quarterId,
     required String templateVersion,
     required Map<String, dynamic> answers,
+    required int currentIndex,
   });
 
   Future<Either<Failure, void>> submit({
