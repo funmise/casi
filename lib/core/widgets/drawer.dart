@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'package:casi/core/pages/about_page.dart';
+import 'package:casi/core/pages/contact.dart';
 import 'package:casi/core/theme/app_pallete.dart';
 import 'package:casi/core/user/cubit/user_cubit.dart';
 import 'package:flutter/material.dart';
@@ -26,13 +26,13 @@ class AppDrawer extends StatelessWidget {
               onTap: () => Navigator.of(context).pop(),
             ),
             ListTile(
-              leading: const Icon(Icons.info_outline),
-              title: const Text('About'),
+              leading: const Icon(Icons.contact_support_outlined),
+              title: const Text('Contact'),
               onTap: () {
                 Navigator.of(context).pop();
                 Navigator.of(
                   context,
-                ).push(MaterialPageRoute(builder: (_) => const AboutPage()));
+                ).push(MaterialPageRoute(builder: (_) => const ContactPage()));
               },
             ),
             const Divider(),

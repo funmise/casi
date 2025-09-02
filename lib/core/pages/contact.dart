@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class AboutPage extends StatelessWidget {
-  const AboutPage({super.key});
+class ContactPage extends StatelessWidget {
+  const ContactPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +25,7 @@ class AboutPage extends StatelessWidget {
     final subhead = body?.copyWith(fontWeight: FontWeight.w600);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('About CASI')),
+      appBar: AppBar(title: const Text('Contact')),
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () {
