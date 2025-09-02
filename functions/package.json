@@ -10,7 +10,8 @@
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
     "import:clinics": "ts-node src/import_clinics.ts",
-    "import:templates": "ts-node src/import_templates.ts"
+    "import:templates": "ts-node src/import_templates.ts",
+    "rollover:quarter": "ts-node src/rollover_quarter.ts"
   },
   "engines": {
     "node": "20"
