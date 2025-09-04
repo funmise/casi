@@ -2,7 +2,7 @@
 import * as admin from "firebase-admin";
 import * as path from "path";
 
-const serviceAccount = require(path.resolve(__dirname, "../serviceAccountKey.json"));
+const serviceAccount = require(path.resolve(__dirname, "../../serviceAccountKey.json"));
 
 try {
   admin.app();
@@ -341,7 +341,7 @@ async function seedInstance(
   if (quarterId && opensISO && closesISO) {
     await seedInstance(quarterId, opensISO, closesISO, versionId);
   } else {
-    console.log(`✓ Only template ${versionId} seeded (no instance).`);
+    console.log(`Only template ${versionId} seeded (no instance).`);
   }
 
   process.exit(0);

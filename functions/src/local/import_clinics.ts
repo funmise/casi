@@ -2,7 +2,16 @@ import * as admin from "firebase-admin";
 import * as XLSX from "xlsx";
 import * as path from "path";
 
-admin.initializeApp();
+const serviceAccount = require(path.resolve(__dirname, "../../serviceAccountKey.json"));
+
+try {
+  admin.app();
+} catch {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    projectId: serviceAccount.project_id,
+  });
+}
 const db = admin.firestore();
 
 type RawRow = Record<string, any>;
@@ -27,7 +36,7 @@ const pick = (r: RawRow, keys: string[]) =>
  * @param ws
  */
 function findHeaderRow(ws: XLSX.WorkSheet): { headerRow: string[]; startRow: number } | null {
-  const aoa = XLSX.utils.sheet_to_json<any[]>(ws, {header: 1, defval: ""}) as any[][];
+  const aoa = XLSX.utils.sheet_to_json<any[]>(ws, { header: 1, defval: "" }) as any[][];
   const wanted = /^(organization|clinic\s*name|name)$/i;
 
   for (let i = 0; i < Math.min(10, aoa.length); i++) {
@@ -35,7 +44,7 @@ function findHeaderRow(ws: XLSX.WorkSheet): { headerRow: string[]; startRow: num
     if (row.some((c) => typeof c === "string" && wanted.test(c))) {
       // normalize empty headers to unique placeholders so xlsx won't drop columns
       const headerRow = row.map((h, idx) => (h && String(h).trim()) || `col_${idx}`);
-      return {headerRow, startRow: i + 1};
+      return { headerRow, startRow: i + 1 };
     }
   }
   return null;
@@ -63,7 +72,7 @@ async function run() {
       continue;
     }
 
-    const {headerRow, startRow} = headerInfo;
+    const { headerRow, startRow } = headerInfo;
 
     // Re-read as objects using the detected header row
     const rows = XLSX.utils.sheet_to_json<RawRow>(ws, {
@@ -82,7 +91,7 @@ async function run() {
 
       const city = pick(r, ["City"]) || undefined;
       const province =
-                pick(r, ["Province", "Province/Territory"]) || sheetName.trim() || undefined;
+        pick(r, ["Province", "Province/Territory"]) || sheetName.trim() || undefined;
       const status = (pick(r, ["Status"]) || "active").toLowerCase();
 
       const avgDogsStr = pick(r, ["AvgDogsPerWeek", "Avg Dogs/Week", "Avg Dogs per Week"]);
@@ -95,7 +104,7 @@ async function run() {
         province,
         city,
         status,
-        ...(avgDogsPerWeek !== undefined ? {avgDogsPerWeek} : {}),
+        ...(avgDogsPerWeek !== undefined ? { avgDogsPerWeek } : {}),
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       });
 

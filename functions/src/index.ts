@@ -6,9 +6,8 @@ import { FieldValue } from "firebase-admin/firestore";
 import type { UserRecord } from "firebase-admin/auth";
 
 import { onSchedule } from "firebase-functions/v2/scheduler";
-import { onCall } from "firebase-functions/v2/https";
+//import { onCall } from "firebase-functions/v2/https";
 
-import path from "path";
 
 /** Global defaults for non-v1 triggers. */
 setGlobalOptions({ region: "northamerica-northeast1" });
@@ -19,16 +18,7 @@ setGlobalOptions({ region: "northamerica-northeast1" });
  */
 const authFns = functions.region("us-central1");
 
-const serviceAccount = require(path.resolve(__dirname, "../serviceAccountKey.json"));
-
-try {
-  admin.app();
-} catch {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    projectId: serviceAccount.project_id,
-  });
-}
+if (!admin.apps.length) admin.initializeApp();
 const db = admin.firestore();
 
 /** Minimal shape passed to the Auth beforeSignIn hook. */
@@ -284,7 +274,7 @@ async function rolloverQuarterSurvey(
  * Scheduled: runs 00:00 on Jan 1, Apr 1, Jul 1, Oct 1 in America/Regina.
  * Creates/activates the *previous* quarter's survey and deactivates others.
  */
-export const rollQuarterSurvey = onSchedule(
+export const advanceQuarterWindow = onSchedule(
   {
     schedule: "0 0 1 Jan,Apr,Jul,Oct *",
     timeZone: "America/Regina",
@@ -298,16 +288,5 @@ export const rollQuarterSurvey = onSchedule(
   }
 );
 
-/**
- * Manual callable to run the rollover immediately.
- * Optional data: { templateVersion?: string }
- */
-export const rollQuarterSurveyNow = onCall(async (req) => {
-  const templateVersion =
-    (req.data && typeof req.data.templateVersion === "string" ?
-      req.data.templateVersion :
-      "v1");
-  const result = await rolloverQuarterSurvey({ templateVersion });
-  return result;
-});
 export { rolloverQuarterSurvey };
+export { onSurveySubmittedExport, nightlyExportRebuild } from './export_quarter';
