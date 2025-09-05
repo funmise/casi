@@ -522,7 +522,7 @@ export const nightlyExportRebuild = onSchedule(
     {
         region: 'northamerica-northeast1',
         schedule: '0 3 * * *',
-        timeZone: 'Etc/UTC',
+        timeZone: "America/Regina",
         secrets: EXPORT_SECRETS,
     },
     async () => {
