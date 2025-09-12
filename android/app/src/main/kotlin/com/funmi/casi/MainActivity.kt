@@ -10,10 +10,10 @@ class MainActivity : FlutterActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Create the notifications channel used by your FCM messages
+        // Create the notifications channel used by FCM messages
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                "casi_general",                 // must match your Cloud Function
+                "casi_general",                 // must match Cloud Function
                 "CASI",                         // user-visible name
                 NotificationManager.IMPORTANCE_DEFAULT
             )
