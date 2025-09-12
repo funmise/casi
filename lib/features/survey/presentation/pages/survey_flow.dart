@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:casi/core/push/push_topics.dart';
 import 'package:casi/core/user/cubit/user_cubit.dart';
 import 'package:casi/core/user/cubit/user_state.dart';
 import 'package:casi/core/widgets/loader.dart';
@@ -25,6 +28,11 @@ class SurveyFlow extends StatelessWidget {
             listenWhen: (prev, curr) => prev.runtimeType != curr.runtimeType,
             listener: (context, state) {
               if (state is SurveySubmitted) {
+                // Unsubscribe this device from the quarter topic
+                // so it stops receiving weekly reminders.
+                unawaited(PushTopics.unsubscribeAll());
+
+                // Then navigate to the thank-you page
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(builder: (_) => const SurveyThankYouPage()),
                 );

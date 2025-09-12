@@ -30,7 +30,7 @@ function getCfg(): any {
 }
 const CFG = getCfg();
 
-// Drive OAuth (personal Google account). Accept from drive.* OR export.drive_*
+// Drive OAuth (personal Google account). Accept from drive.* OR export.drive_* OR env due to v1 and v2 peculiarities
 const DRIVE_CLIENT_ID =
     CFG.drive?.client_id || process.env.DRIVE_CLIENT_ID || CFG.export?.drive_client_id || '';
 const DRIVE_CLIENT_SECRET =
@@ -526,13 +526,10 @@ export const nightlyExportRebuild = onSchedule(
         secrets: EXPORT_SECRETS,
     },
     async () => {
-        const insts = await db.collection('survey_instances').orderBy('opensAt', 'desc').limit(3).get();
-
-        const quarters = Array.from(
-            new Set(insts.docs.map((d) => (d.get('quarter') as string) ?? d.id)),
-        ).slice(0, 2);
-
-        for (const q of quarters) await rebuildQuarter(q, { upload: true });
+        const inst = await db.collection('survey_instances')
+            .orderBy('opensAt', 'desc').limit(1).get();
+        const q = (inst.docs[0]?.get('quarter') as string) ?? inst.docs[0]?.id;
+        if (q) await rebuildQuarter(q, { upload: true });
     },
 );
 

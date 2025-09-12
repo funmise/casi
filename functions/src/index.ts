@@ -290,3 +290,4 @@ export const advanceQuarterWindow = onSchedule(
 
 export { rolloverQuarterSurvey };
 export { onSurveySubmittedExport, nightlyExportRebuild } from './export_quarter';
+export { onSurveyInstanceActivatedSendReminder, weeklySurveyReminder, onFcmTokenWritten } from './notifications';

@@ -1,11 +1,55 @@
 part of 'init_dependencies.dart';
 
 final serviceLocator = GetIt.instance;
+final _fln = FlutterLocalNotificationsPlugin();
 
 Future<void> initDependencies() async {
+  // FCM background handler
+  FirebaseMessaging.onBackgroundMessage(_bgHandler);
+
   // --- external SDK initialization ---
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await GoogleSignIn.instance.initialize();
+
+  // Ensure FCM auto-init + permissions
+  await FirebaseMessaging.instance.setAutoInitEnabled(true);
+  await FirebaseMessaging.instance.requestPermission();
+
+  // Local notifications init
+  const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+  const iosInit = DarwinInitializationSettings();
+  await _fln.initialize(
+    const InitializationSettings(android: androidInit, iOS: iosInit),
+  );
+
+  // iOS: allow showing notification while app is foreground
+  await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
+
+  // Foreground handler -> show a local notification
+  FirebaseMessaging.onMessage.listen((RemoteMessage m) async {
+    final n = m.notification;
+    if (n == null) return; // if we send data-only, render from m.data
+
+    const androidDetails = AndroidNotificationDetails(
+      'casi_general', // must match our created channel id
+      'CASI',
+      importance: Importance.high,
+      priority: Priority.high,
+    );
+    const iosDetails = DarwinNotificationDetails();
+
+    await _fln.show(
+      n.hashCode,
+      n.title,
+      n.body,
+      const NotificationDetails(android: androidDetails, iOS: iosDetails),
+      payload: m.data.isEmpty ? null : m.data.toString(),
+    );
+  });
 
   // Firebase and google singletons
   serviceLocator
@@ -114,4 +158,9 @@ Future<void> initDependencies() async {
       submitSurvey: serviceLocator(),
     ),
   );
+}
+
+@pragma('vm:entry-point')
+Future<void> _bgHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
 }

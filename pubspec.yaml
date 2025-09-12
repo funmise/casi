@@ -48,6 +48,8 @@ dependencies:
   rxdart: ^0.28.0
   country_state_city: ^0.1.6
   url_launcher: ^6.3.2
+  firebase_messaging: ^16.0.1
+  flutter_local_notifications: ^19.4.1
 
 dev_dependencies:
   flutter_test:

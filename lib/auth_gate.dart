@@ -1,4 +1,6 @@
 import 'package:casi/core/enums.dart';
+import 'package:casi/core/push/push_token_uploader.dart';
+import 'package:casi/core/push/push_topics.dart';
 import 'package:casi/core/user/cubit/user_cubit.dart';
 import 'package:casi/core/user/cubit/user_state.dart';
 import 'package:casi/core/widgets/loader.dart';
@@ -54,7 +56,7 @@ class _AuthGateState extends State<AuthGate> {
         }
         return false;
       },
-      listener: (context, state) {
+      listener: (context, state) async {
         if (state is UserInitial || state is UserLoading) {
           if (!_decided) _go(_Phase.loading, const Scaffold(body: Loader()));
           return;
@@ -94,6 +96,23 @@ class _AuthGateState extends State<AuthGate> {
                   ? const TempDashboard()
                   : const OnboardingFlow(),
             );
+
+            // subscribe this device to the active quarter topic
+            // This is idempotent and cheap; it will no-op if already subscribed.
+            final user = state.user;
+            final qid = user.activeSurveyQuarter;
+            final qStatus = user.activeSurveyStatus;
+
+            if (qid == null || qid.isEmpty || qStatus == 'submitted') {
+              // fire-and-forget is fine; no need to block navigation
+              PushTopics.unsubscribeAll();
+            } else {
+              // Client-side subscription
+              await PushTopics.ensureSubscribed(qid);
+
+              // Also upload token so server can manage subscriptions
+              await PushTokenUploader.ensureUploaded();
+            }
           }
         }
       },

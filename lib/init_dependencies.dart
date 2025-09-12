@@ -24,6 +24,8 @@ import 'package:casi/features/survey/presentation/bloc/survey_bloc.dart';
 import 'package:casi/firebase_options.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get_it/get_it.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:google_sign_in/google_sign_in.dart';
