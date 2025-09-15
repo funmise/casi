@@ -11,6 +11,8 @@ class UserInitial extends UserState {}
 
 class UserLoading extends UserState {}
 
+class UserDeleting extends UserState {}
+
 class UserUnauthenticated extends UserState {}
 
 class UserReady extends UserState {

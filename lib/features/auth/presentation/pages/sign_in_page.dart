@@ -46,8 +46,9 @@ class SignInPage extends StatelessWidget {
                       const SizedBox(height: 100),
 
                       GoogleButton(
-                        onPressed: () =>
-                            context.read<AuthBloc>().add(AuthGoogleRequested()),
+                        onPressed: () {
+                          context.read<AuthBloc>().add(AuthGoogleRequested());
+                        },
                       ),
 
                       const SizedBox(height: 30),

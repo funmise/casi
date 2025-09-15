@@ -75,7 +75,11 @@ Future<void> initDependencies() async {
   );
 
   serviceLocator.registerFactory<UserCubit>(
-    () => UserCubit(watch: serviceLocator(), signOut: serviceLocator()),
+    () => UserCubit(
+      watch: serviceLocator(),
+      signOut: serviceLocator(),
+      deleteAccount: serviceLocator(),
+    ),
   );
 
   // ---- Auth ----
@@ -94,6 +98,7 @@ Future<void> initDependencies() async {
     //UseCases
     ..registerFactory(() => GoogleSignInUC(serviceLocator()))
     ..registerFactory<IsSignOut>(() => SignOut(serviceLocator()))
+    ..registerFactory<IsDeleteAccount>(() => DeleteAccount(serviceLocator()))
     //Blocs
     ..registerFactory(
       () => AuthBloc(

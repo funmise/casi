@@ -57,6 +57,17 @@ class _AuthGateState extends State<AuthGate> {
         return false;
       },
       listener: (context, state) async {
+        // Force full-screen loader during destructive operations
+        if (state is UserDeleting) {
+          _go(_Phase.loading, const Scaffold(body: Loader()));
+          return;
+        }
+        if (state is UserError) {
+          final messenger = ScaffoldMessenger.maybeOf(context);
+          messenger
+            ?..hideCurrentSnackBar()
+            ..showSnackBar(SnackBar(content: Text(state.message)));
+        }
         if (state is UserInitial || state is UserLoading) {
           if (!_decided) _go(_Phase.loading, const Scaffold(body: Loader()));
           return;

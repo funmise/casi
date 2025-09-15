@@ -14,4 +14,9 @@ abstract interface class IsSignOut implements UseCase<void, NoParams> {
   Future<Either<Failure, void>> call(NoParams params);
 }
 
+abstract interface class IsDeleteAccount implements UseCase<void, NoParams> {
+  @override
+  Future<Either<Failure, void>> call(NoParams params);
+}
+
 class NoParams {}

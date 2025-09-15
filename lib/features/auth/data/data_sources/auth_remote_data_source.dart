@@ -7,6 +7,7 @@ import 'package:casi/core/user/data/models/user_model.dart';
 abstract interface class AuthRemoteDataSource {
   Future<UserModel> signInWithGoogle();
   Future<void> signOut();
+  Future<void> deleteAccount();
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -69,5 +70,56 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<void> signOut() async {
     await _google.signOut();
     await _auth.signOut();
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    try {
+      final u = _auth.currentUser;
+      if (u == null) throw ServerException('Not signed in.');
+
+      Future<void> reauthAndDelete() async {
+        // Pick a provider; prefer the first entry (or check contains('google.com'))
+        final providers = u.providerData.map((p) => p.providerId).toList();
+
+        if (providers.contains('google.com')) {
+          final p = fa.GoogleAuthProvider();
+          // Optional, but helps force a fresh token/UI:
+          p.setCustomParameters({'prompt': 'consent'});
+          await u.reauthenticateWithProvider(p);
+        } else if (providers.contains('apple.com')) {
+          final p = fa.AppleAuthProvider();
+          await u.reauthenticateWithProvider(p);
+        } else {
+          // Fallback – first provider entry
+          final first = u.providerData.firstOrNull?.providerId ?? '';
+          if (first == 'apple.com') {
+            await u.reauthenticateWithProvider(fa.AppleAuthProvider());
+          } else if (first == 'google.com') {
+            await u.reauthenticateWithProvider(fa.GoogleAuthProvider());
+          } else {
+            throw ServerException(
+              'Please sign in again and retry account deletion (recent login required).',
+            );
+          }
+        }
+
+        await u.delete();
+      }
+
+      try {
+        await u.delete();
+      } on fa.FirebaseAuthException catch (e) {
+        if (e.code == 'requires-recent-login') {
+          await reauthAndDelete();
+        } else {
+          throw ServerException(e.message ?? 'Account deletion failed.');
+        }
+      }
+    } on ServerException {
+      rethrow;
+    } catch (e) {
+      throw ServerException('Unexpected error during deletion: $e');
+    }
   }
 }

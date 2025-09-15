@@ -35,6 +35,7 @@ import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/domain/usecases/google_sign_in.dart';
 import 'features/auth/domain/usecases/sign_out.dart';
+import 'features/auth/domain/usecases/delete_account.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 
 part 'init_dependencies.main.dart';

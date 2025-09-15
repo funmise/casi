@@ -156,10 +156,23 @@ export const refreshUserDocOnSignIn = authFns
  * Resolves after the delete attempt.
  */
 export const onAuthUserDeleted = authFns
+  .runWith({ timeoutSeconds: 540, memory: "1GB" })
   .auth
   .user()
-  .onDelete(async (user: UserRecord): Promise<void> => {
-    await db.doc(`users/${user.uid}`).delete().catch(() => null);
+  .onDelete(async (user): Promise<void> => {
+    const userRef = admin.firestore().doc(`users/${user.uid}`);
+
+    try {
+      const fsAny: any = admin.firestore();
+      if (typeof fsAny.recursiveDelete === "function") {
+        await fsAny.recursiveDelete(userRef);
+      } else {
+        await userRef.delete().catch(() => null);
+      }
+      console.log(`[onAuthUserDeleted] cleaned users/${user.uid}`);
+    } catch (err) {
+      console.error(`[onAuthUserDeleted] failed for users/${user.uid}`, err);
+    }
   });
 
 

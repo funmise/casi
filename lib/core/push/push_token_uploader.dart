@@ -1,12 +1,15 @@
+import 'dart:async';
 import 'dart:io' show Platform;
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class PushTokenUploader {
   static final _messaging = FirebaseMessaging.instance;
   static final _db = FirebaseFirestore.instance;
   static final _auth = FirebaseAuth.instance;
+
+  static StreamSubscription<String>? _tokenSub;
 
   static Future<void> ensureUploaded() async {
     final uid = _auth.currentUser?.uid;
@@ -14,7 +17,6 @@ class PushTokenUploader {
 
     // iOS: skip if APNs token doesn't exist (simulator / no APNs config)
     if (Platform.isIOS) {
-      await _messaging.requestPermission();
       final apns = await _messaging.getAPNSToken();
       if (apns == null) return;
     }
@@ -34,31 +36,39 @@ class PushTokenUploader {
         ? 'linux'
         : 'unknown';
 
-    final ref = _db
+    await _db
         .collection('users')
         .doc(uid)
         .collection('fcmTokens')
-        .doc(token);
+        .doc(token)
+        .set({
+          'platform': platform,
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
 
-    await ref.set({
-      'platform': platform,
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    //replace any previous listener so no stale-UID callback remains.
+    await _tokenSub?.cancel();
+    _tokenSub = _messaging.onTokenRefresh.listen((newToken) async {
+      final freshUid = _auth.currentUser?.uid; // fetch at callback time
+      if (freshUid == null) return;
 
-    // Keep Firestore up-to-date if the token ever rotates
-    _messaging.onTokenRefresh.listen((newToken) async {
-      final newRef = _db
+      await _db
           .collection('users')
-          .doc(uid)
+          .doc(freshUid)
           .collection('fcmTokens')
-          .doc(newToken);
-
-      await newRef.set({
-        'platform': platform,
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+          .doc(newToken)
+          .set({
+            'platform': platform,
+            'createdAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
     });
+  }
+
+  /// Call before signOut/delete to remove any listener that captured an old UID.
+  static Future<void> dispose() async {
+    await _tokenSub?.cancel();
+    _tokenSub = null;
   }
 }
