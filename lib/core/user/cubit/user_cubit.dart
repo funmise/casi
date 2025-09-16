@@ -49,6 +49,7 @@ class UserCubit extends Cubit<UserState> {
   }
 
   Future<void> signOut() async {
+    emit(UserLoading());
     await PushTokenUploader.dispose();
     final res = await _signOut(NoParams());
     res.match((f) => emit(UserError(f.message)), (_) {

@@ -69,7 +69,7 @@ class _AuthGateState extends State<AuthGate> {
             ..showSnackBar(SnackBar(content: Text(state.message)));
         }
         if (state is UserInitial || state is UserLoading) {
-          if (!_decided) _go(_Phase.loading, const Scaffold(body: Loader()));
+          _go(_Phase.loading, const Scaffold(body: Loader()));
           return;
         }
 
