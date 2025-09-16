@@ -51,6 +51,7 @@ dependencies:
   firebase_messaging: ^16.0.1
   flutter_local_notifications: ^19.4.1
   cloud_functions: ^6.0.1
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -103,3 +104,11 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/casi_icon.png"
+  adaptive_icon_background: "#8093F1"                
+  adaptive_icon_foreground: assets/images/casi_foreground.png
+  remove_alpha_ios: true
