@@ -1,6 +1,7 @@
 import 'package:casi/core/theme/app_pallete.dart';
 import 'package:casi/core/widgets/loader.dart';
 import 'package:casi/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:casi/features/auth/presentation/widgets/apple_button.dart';
 import 'package:casi/features/auth/presentation/widgets/google_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -53,31 +54,10 @@ class SignInPage extends StatelessWidget {
 
                       const SizedBox(height: 30),
 
-                      // Apple button comes later; keeping a disabled placeholder:
-                      SizedBox(
-                        height: 48,
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: null,
-                          style: ElevatedButton.styleFrom(
-                            disabledBackgroundColor: AppPallete.black,
-                            disabledForegroundColor: AppPallete.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.apple, size: 30),
-                              SizedBox(width: 12),
-                              Text(
-                                'Continue with Apple',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                            ],
-                          ),
-                        ),
+                      AppleButton(
+                        onPressed: () {
+                          context.read<AuthBloc>().add(AuthAppleRequested());
+                        },
                       ),
                     ],
                   ),

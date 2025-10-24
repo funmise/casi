@@ -97,12 +97,14 @@ Future<void> initDependencies() async {
     )
     //UseCases
     ..registerFactory(() => GoogleSignInUC(serviceLocator()))
+    ..registerFactory(() => AppleSignInUC(serviceLocator()))
     ..registerFactory<IsSignOut>(() => SignOut(serviceLocator()))
     ..registerFactory<IsDeleteAccount>(() => DeleteAccount(serviceLocator()))
     //Blocs
     ..registerFactory(
       () => AuthBloc(
         googleSignIn: serviceLocator(),
+        appleSignIn: serviceLocator(),
         signOut: serviceLocator(),
         watchUser: serviceLocator(),
       ),

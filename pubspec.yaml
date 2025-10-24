@@ -52,6 +52,8 @@ dependencies:
   flutter_local_notifications: ^19.4.1
   cloud_functions: ^6.0.1
   flutter_launcher_icons: ^0.14.4
+  crypto: ^3.0.6
+  sign_in_with_apple: ^7.0.1
 
 dev_dependencies:
   flutter_test:

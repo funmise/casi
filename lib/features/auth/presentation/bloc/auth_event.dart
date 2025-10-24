@@ -7,4 +7,6 @@ final class AuthCheckRequested extends AuthEvent {}
 
 final class AuthGoogleRequested extends AuthEvent {}
 
+final class AuthAppleRequested extends AuthEvent {}
+
 final class AuthSignedOut extends AuthEvent {}

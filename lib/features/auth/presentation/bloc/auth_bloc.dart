@@ -6,6 +6,7 @@ import 'package:casi/core/user/domain/entities/user.dart';
 import 'package:casi/core/user/domain/entities/user_profile.dart';
 import 'package:casi/core/user/domain/extension/user_profile_x.dart';
 import 'package:casi/core/user/domain/usecases/watch_user.dart';
+import 'package:casi/features/auth/domain/usecases/apple_sign_in.dart';
 import 'package:casi/features/auth/domain/usecases/google_sign_in.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/foundation.dart';
@@ -16,20 +17,24 @@ part 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final GoogleSignInUC _googleSignIn;
+  final AppleSignInUC _appleSignIn;
   //final GetCurrentUser _getCurrentUser;
   final IsSignOut _signOut;
   final WatchUser _watchUser;
 
   AuthBloc({
     required GoogleSignInUC googleSignIn,
+    required AppleSignInUC appleSignIn,
     required IsSignOut signOut,
     required WatchUser watchUser,
   }) : _googleSignIn = googleSignIn,
+       _appleSignIn = appleSignIn,
        _signOut = signOut,
        _watchUser = watchUser,
        super(AuthInitial()) {
     on<AuthCheckRequested>(_onCheck);
     on<AuthGoogleRequested>(_onGoogle);
+    on<AuthAppleRequested>(_onApple);
     on<AuthSignedOut>(_onSignOut);
   }
 
@@ -60,6 +65,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       // DO not emit(AuthAuthenticated(u));
       //Do nothing; WatchUser will emit Right(null) -> AuthUnauthenticated.
     });
+  }
+
+  Future<void> _onApple(AuthAppleRequested e, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+    final res = await _appleSignIn(NoParams());
+    res.fold((f) => emit(AuthFailure(f.message)), (u) {});
   }
 
   Future<void> _onSignOut(AuthSignedOut e, Emitter<AuthState> emit) async {

@@ -3,7 +3,7 @@ import { setGlobalOptions } from "firebase-functions/v2";
 
 import * as admin from "firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
-import type { UserRecord } from "firebase-admin/auth";
+import { type UserRecord } from "firebase-admin/auth";
 
 import { onSchedule } from "firebase-functions/v2/scheduler";
 //import { onCall } from "firebase-functions/v2/https";
@@ -102,6 +102,15 @@ function toPublicUser(u: UserRecord | BlockingUserInfo): PublicUser {
   };
 }
 
+const removeEmptyFields = <T extends object>(record: T): Partial<T> =>
+  Object.fromEntries(
+    Object.entries(record).filter(([_, value]) => {
+      if (value === null || value === undefined) return false;
+      if (typeof value === "string" && value.trim() === "") return false;
+      return true;
+    })
+  ) as Partial<T>;
+
 /**
  * Create/seed `/users/{uid}` when the account is created.
  * @param {UserRecord} user
@@ -126,6 +135,8 @@ export const onAuthUserCreated = authFns
 
 /**
  * Refresh the user doc on every sign-in (blocking).
+ * makes sure not to remove data as apple for instance
+ * provides less data after first sign in.
  * @param {BlockingUserInfo} event
  * The blocking sign-in payload.
  * @returns {Promise<object>}
@@ -136,14 +147,21 @@ export const refreshUserDocOnSignIn = authFns
   .user()
   .beforeSignIn(
     async (event: BlockingUserInfo): Promise<object> => {
-      await db.doc(`users/${event.uid}`).set(
-        {
-          ...toPublicUser(event),
-          updatedAt: FieldValue.serverTimestamp(),
-          lastSignInAt: FieldValue.serverTimestamp(),
-        },
-        { merge: true },
-      );
+      const userRef = db.doc(`users/${event.uid}`);
+
+      const publicUser = toPublicUser(event);
+      const cleaned = removeEmptyFields(publicUser);
+
+      const toWrite = {
+        ...cleaned,
+        updatedAt: FieldValue.serverTimestamp(),
+        lastSignInAt: FieldValue.serverTimestamp(),
+      };
+
+      // Only write if there’s something to merge
+      if (Object.keys(toWrite).length) {
+        await userRef.set(toWrite, { merge: true });
+      }
       return {};
     },
   );

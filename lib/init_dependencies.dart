@@ -3,6 +3,7 @@ import 'package:casi/core/user/data/data_sources/user_remote_data_source.dart';
 import 'package:casi/core/user/data/repositories/user_repository_impl.dart';
 import 'package:casi/core/user/domain/repositories/user_repository.dart';
 import 'package:casi/core/user/domain/usecases/watch_user.dart';
+import 'package:casi/features/auth/domain/usecases/apple_sign_in.dart';
 import 'package:casi/features/enrollment/data/data_sources/enrollment_remote_data_source.dart';
 import 'package:casi/features/enrollment/data/repositories/enrollment_repository_impl.dart';
 import 'package:casi/features/enrollment/domain/repositories/enrollment_repository.dart';

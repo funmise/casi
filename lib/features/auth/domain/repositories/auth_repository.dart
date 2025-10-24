@@ -5,6 +5,7 @@ import 'package:fpdart/fpdart.dart';
 
 abstract interface class AuthRepository {
   Future<Either<Failure, User>> signInWithGoogle();
+  Future<Either<Failure, User>> signInWithApple();
   Future<Either<Failure, void>> signOut();
   Future<Either<Failure, void>> deleteAccount();
 }
