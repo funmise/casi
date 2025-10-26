@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:casi/core/user/cubit/user_cubit.dart';
 import 'package:casi/core/user/cubit/user_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 
@@ -51,8 +52,49 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
   Timer? _resolveTimer;
   bool _wiredClinicListener = false;
   bool _wiredProvinceListener = false;
+  bool _wiredCityFocusListener = false;
   bool get _hasClinicText =>
       (_clinicTypeaheadCtrl?.text.trim().isNotEmpty ?? false);
+
+  // scrolling + anchors
+  final _scrollCtrl = ScrollController();
+  final _clinicKey = GlobalKey();
+  final _provinceKey = GlobalKey();
+  final _cityKey = GlobalKey();
+
+  // scroll for typeahaead
+  void _animateToKey(GlobalKey key, {double alignment = 0.0}) {
+    // Run after current frame and after keyboard starts animating
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = key.currentContext;
+      if (ctx == null) return;
+      final renderObject = ctx.findRenderObject();
+      if (renderObject is! RenderBox) return;
+
+      final viewport = RenderAbstractViewport.of(renderObject);
+
+      // alignment: 0.0 = top, 1.0 = bottom
+      final target = viewport.getOffsetToReveal(renderObject, alignment).offset;
+
+      // Leave a little headroom
+      final double padding = 12.0;
+
+      // Clamp
+      final position = _scrollCtrl.position;
+      final clamped = target - padding;
+      final to = clamped.clamp(
+        position.minScrollExtent,
+        position.maxScrollExtent,
+      );
+
+      // Animate to final position
+      _scrollCtrl.animateTo(
+        to,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
 
   @override
   void dispose() {
@@ -330,6 +372,7 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
           child: SafeArea(
             child: Center(
               child: SingleChildScrollView(
+                controller: _scrollCtrl,
                 padding: const EdgeInsets.all(24),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 480),
@@ -382,9 +425,20 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
                                   controller.text,
                                 ); // live auto-resolve + lock/unlock
                               });
+
+                              // auto-scroll: focus → slight delay → animate
+                              focusNode.addListener(() {
+                                if (focusNode.hasFocus) {
+                                  Future.delayed(
+                                    const Duration(milliseconds: 800),
+                                    () => _animateToKey(_clinicKey),
+                                  );
+                                }
+                              });
                             }
 
                             return PrimaryTextField(
+                              key: _clinicKey,
                               controller: controller,
                               focusNode: focusNode,
                               hint: 'Clinic Name',
@@ -472,8 +526,19 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
                                     _citySuggestionsCtrl.refresh();
                                   }
                                 });
+
+                                // auto-scroll: focus → slight delay → animate
+                                focusNode.addListener(() {
+                                  if (focusNode.hasFocus) {
+                                    Future.delayed(
+                                      const Duration(milliseconds: 800),
+                                      () => _animateToKey(_provinceKey),
+                                    );
+                                  }
+                                });
                               }
                               return PrimaryTextField(
+                                key: _provinceKey,
                                 controller: controller,
                                 focusNode: focusNode,
                                 hint: 'Province (optional)',
@@ -555,7 +620,22 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
                               _cityTypeaheadCtrl ??= controller;
                               _cityTypeaheadFocus ??= focusNode;
 
+                              if (!_wiredCityFocusListener) {
+                                _wiredCityFocusListener = true;
+
+                                // scroll on focus (delayed for keyboard)
+                                focusNode.addListener(() {
+                                  if (focusNode.hasFocus) {
+                                    Future.delayed(
+                                      const Duration(milliseconds: 800),
+                                      () => _animateToKey(_cityKey),
+                                    );
+                                  }
+                                });
+                              }
+
                               return PrimaryTextField(
+                                key: _cityKey,
                                 controller: controller,
                                 focusNode: focusNode,
                                 hint: 'City (optional)',
