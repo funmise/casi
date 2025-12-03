@@ -97,6 +97,19 @@ class _DashboardScaffold extends StatelessWidget {
           },
         ),
       ),
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.only(bottom: 12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            'Therapy dog icon designed by Freepik',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Colors.black.withValues(alpha: 0.35),
+                ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -710,6 +710,15 @@ class _VerifyClinicPageState extends State<VerifyClinicPage> {
                         const SizedBox(height: 50),
 
                         PrimaryButton(label: 'Submit', onPressed: _submit),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Clinic icon designed by Freepik',
+                          style: TextStyle(
+                            color: AppPallete.white.withValues(alpha: .35),
+                            fontSize: 11,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
                       ],
                     ),
                   ),
