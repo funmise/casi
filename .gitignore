@@ -50,3 +50,10 @@ serviceAccountKey*
 .runtimeconfig.json
 */secrets
 .secrets
+*/key.properties
+
+# API KEY
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+macos/Runner/GoogleService-Info.plist
+lib/firebase_options.dart
